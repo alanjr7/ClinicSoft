@@ -1,0 +1,100 @@
+<?php
+
+namespace App\Models;
+
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+
+class User extends Authenticatable
+{
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable, HasUuids;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'email',
+        'password',
+        'encrypted_password',
+        'first_name',
+        'last_name',
+        'phone',
+        'avatar_url',
+        'global_role',
+        'is_active',
+        'last_login_at',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
+        ];
+    }
+
+    public function tenantUsers()
+    {
+        return $this->hasMany(TenantUser::class);
+    }
+
+    public function dentistProfiles()
+    {
+        return $this->hasMany(DentistProfile::class);
+    }
+
+    public function dentistProfile()
+    {
+        return $this->hasOne(DentistProfile::class);
+    }
+
+    public function doctorProfiles()
+    {
+        return $this->hasMany(DoctorProfile::class);
+    }
+
+    public function doctorProfile()
+    {
+        return $this->hasOne(DoctorProfile::class);
+    }
+
+    public function modulePermissions()
+    {
+        return $this->hasMany(UserModulePermission::class);
+    }
+
+    public function area()
+    {
+        return $this->hasOne(Area::class);
+    }
+
+    public function getNameAttribute(): string
+    {
+        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+    }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "https://dentalsoft.vmc-sj.com/book/",
+  "name": "Reserva de Citas — DentalSoft",
+  "short_name": "Reserva Citas",
+  "description": "Reserva tu cita dental en línea de forma rápida, segura y sencilla.",
+  "start_url": "https://dentalsoft.vmc-sj.com/book/",
+  "scope": "https://dentalsoft.vmc-sj.com/book/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F8FAFC",
+  "theme_color": "#14B8A6",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

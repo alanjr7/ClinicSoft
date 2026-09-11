@@ -1,0 +1,67 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* ============================================================
+   Impresión — vista limpia en B&N
+   Cualquier elemento marcado con `.print-area` se imprime;
+   el resto se oculta. Tipografía serif clásica para documento.
+   ============================================================ */
+.print-area { display: none; }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+
+  body { background: #ffffff !important; }
+
+  body * { visibility: hidden !important; }
+
+  .print-area,
+  .print-area * { visibility: visible !important; }
+
+  .print-area {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    color: #000;
+    background: #fff;
+    font-family: 'Georgia', 'Times New Roman', Times, serif;
+    font-size: 11pt;
+    line-height: 1.45;
+    padding: 0;
+  }
+
+  .print-area h1,
+  .print-area h2,
+  .print-area h3 {
+    font-family: 'Georgia', 'Times New Roman', Times, serif;
+    color: #000;
+  }
+
+  .print-area .page-break { page-break-before: always; }
+  .print-area .no-break  { page-break-inside: avoid; }
+}
