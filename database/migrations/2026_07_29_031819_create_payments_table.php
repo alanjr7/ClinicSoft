@@ -15,7 +15,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('tenant_id')->constrained('tenants')->onDelete('cascade');
             $table->foreignUuid('invoice_id')->nullable()->constrained('invoices')->onDelete('cascade');
-            $table->foreignUuid('patient_id')->constrained('patients')->onDelete('cascade');
+            $table->foreignUuid('patient_id')->nullable()->constrained('patients')->onDelete('cascade');
+            $table->string('customer_name', 150)->nullable();
+            $table->string('customer_ci', 50)->nullable();
             $table->foreignUuid('received_by')->constrained('users')->onDelete('cascade');
             $table->string('payment_method', 20);
             $table->decimal('amount', 12, 2);

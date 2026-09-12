@@ -293,23 +293,30 @@ export default function Inventory({
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="p-4 sm:p-8 min-h-screen bg-[#F8FAFC] dark:bg-[#0B1120] text-[#111827] dark:text-[#F8FAFC] transition-colors duration-200">
+    <div className={`${activeTab === 'pos' ? 'p-3 sm:p-4 pb-2 h-full flex flex-col overflow-hidden' : 'p-4 sm:p-8 min-h-screen'} bg-[#F8FAFC] dark:bg-[#0B1120] text-[#111827] dark:text-[#F8FAFC] transition-colors duration-200`}>
 
       {/* Header */}
-      <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className={`${activeTab === 'pos' ? 'mb-3' : 'mb-8'} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3`}>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#111827] dark:text-[#F8FAFC] mb-1">
-            {activeTab === 'pos' ? 'Punto de Venta (POS)' : 'Inventario'}
-          </h1>
-          <p className="text-[#6B7280] dark:text-[#94A3B8] text-sm">
+          <div className="flex items-center gap-2">
+            <h1 className={`${activeTab === 'pos' ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} font-bold text-[#111827] dark:text-[#F8FAFC]`}>
+              {activeTab === 'pos' ? 'Punto de Venta (POS)' : 'Inventario'}
+            </h1>
+            {activeTab === 'pos' && (
+              <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                ● Caja Activa
+              </span>
+            )}
+          </div>
+          <p className="text-[#6B7280] dark:text-[#94A3B8] text-xs sm:text-sm">
             {activeTab === 'pos'
-              ? 'Módulo de caja y venta directa de materiales odontológicos, insumos y medicamentos'
+              ? 'Módulo de caja y venta directa sin necesidad de scroll'
               : 'Control de materiales odontológicos por clínica (SaaS)'}
           </p>
         </div>
 
         {/* Action Buttons Top */}
-        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {activeTab === 'inventory' ? (
             <>
               {/* Botón Venta POS */}
@@ -346,12 +353,12 @@ export default function Inventory({
               </Button>
             </>
           ) : (
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 type="button"
                 onClick={() => setShowThermalModal(true)}
-                className="h-11 border-sky-300/60 dark:border-sky-800 bg-[#F0F9FF] dark:bg-sky-950/40 text-[#0369A1] dark:text-[#38BDF8] hover:bg-[#BAE6FD] dark:hover:bg-sky-900/60 rounded-xl px-4 gap-2 cursor-pointer transition-all font-semibold shadow-sm"
+                className="h-9 sm:h-10 border-sky-300/60 dark:border-sky-800 bg-[#F0F9FF] dark:bg-sky-950/40 text-[#0369A1] dark:text-[#38BDF8] hover:bg-[#BAE6FD] dark:hover:bg-sky-900/60 rounded-xl px-3 sm:px-4 gap-1.5 cursor-pointer transition-all font-semibold shadow-sm text-xs sm:text-sm"
               >
                 <Printer className="w-4 h-4 text-[#0369A1] dark:text-[#38BDF8]" />
                 Imprimir Ventas
@@ -360,7 +367,7 @@ export default function Inventory({
               <Button
                 variant="outline"
                 onClick={() => handleTabChange('inventory')}
-                className="h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] text-gray-700 dark:text-gray-200 hover:bg-[#F8FAFC] dark:hover:bg-[#1E293B] rounded-xl px-5 gap-2 cursor-pointer transition-colors font-semibold"
+                className="h-9 sm:h-10 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] text-gray-700 dark:text-gray-200 hover:bg-[#F8FAFC] dark:hover:bg-[#1E293B] rounded-xl px-3 sm:px-4 gap-1.5 cursor-pointer transition-colors font-semibold text-xs sm:text-sm"
               >
                 <Boxes className="w-4 h-4 text-[#0284C7] dark:text-[#38BDF8]" />
                 Inventario

@@ -43,7 +43,10 @@ class InventoryController extends Controller
 
         $items      = $query->with('category:id,name')->get();
         $categories = InventoryCategory::where('tenant_id', $tenantId)->orderBy('name')->get(['id', 'name', 'description']);
-        $patients   = Patient::where('tenant_id', $tenantId)->where('is_active', true)->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'national_id', 'phone']);
+        $patients   = Patient::where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'last_name', 'national_id', 'phone']);
         $accounts   = AccountingAccount::where('tenant_id', $tenantId)->where('is_active', true)->where('type', 'asset')->orderBy('code')->get(['id', 'code', 'name']);
         $tenant     = Tenant::find($tenantId);
 
@@ -90,8 +93,8 @@ class InventoryController extends Controller
                 'id'              => $p->id,
                 'ticket_number'   => $ticket,
                 'date'            => $p->created_at ? $p->created_at->format('d/m/Y H:i') : ($p->payment_date ? date('d/m/Y', strtotime($p->payment_date)) : date('d/m/Y H:i')),
-                'patient_name'    => $p->patient ? trim($p->patient->first_name . ' ' . $p->patient->last_name) : 'Cliente Mostrador',
-                'patient_ci'      => $p->patient?->national_id,
+                'patient_name'    => $p->patient ? trim($p->patient->first_name . ' ' . $p->patient->last_name) : ($p->customer_name ?: 'Cliente Mostrador'),
+                'patient_ci'      => $p->patient?->national_id ?? $p->customer_ci,
                 'payment_method'  => $p->payment_method,
                 'items'           => $items->values()->all(),
                 'subtotal'        => (float) $p->amount,
@@ -291,21 +294,13 @@ class InventoryController extends Controller
                 $patient = Patient::where('id', $validated['patient_id'])->where('tenant_id', $tenantId)->first();
             }
 
-            if (!$patient && !empty($validated['patient_name']) && trim($validated['patient_name']) !== 'Cliente Mostrador') {
-                $parts = explode(' ', trim($validated['patient_name']), 2);
-                $patient = Patient::firstOrCreate(
-                    [
-                        'tenant_id'  => $tenantId,
-                        'first_name' => $parts[0],
-                        'last_name'  => $parts[1] ?? '',
-                    ],
-                    [
-                        'created_by'  => Auth::id(),
-                        'national_id' => $validated['patient_ci'] ?? null,
-                        'is_active'   => true,
-                    ]
-                );
-            }
+            $customerName = $patient 
+                ? trim($patient->first_name . ' ' . $patient->last_name) 
+                : (!empty($validated['patient_name']) ? trim($validated['patient_name']) : 'Cliente Mostrador');
+
+            $customerCi = $patient 
+                ? $patient->national_id 
+                : (!empty($validated['patient_ci']) ? trim($validated['patient_ci']) : null);
 
             // Generate sale ticket number
             $ticketNumber = 'POS-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
@@ -335,7 +330,7 @@ class InventoryController extends Controller
                     'stock_after'   => $stockAfter,
                     'reason'        => 'Venta POS (' . $ticketNumber . ')',
                     'reference'     => $ticketNumber,
-                    'notes'         => 'Venta en mostrador / POS a ' . ($patient ? ($patient->first_name . ' ' . $patient->last_name) : 'Cliente Mostrador'),
+                    'notes'         => 'Venta en mostrador / Farmacia a ' . $customerName,
                 ]);
 
                 $item->update(['current_stock' => $stockAfter]);
@@ -361,46 +356,44 @@ class InventoryController extends Controller
                 : $grandTotal;
             $changeAmount   = max(0, $receivedAmount - $grandTotal);
 
-            // Register payment in ERP Financials
-            $payment = null;
-            if ($patient) {
-                $payment = Payment::create([
-                    'tenant_id'        => $tenantId,
-                    'patient_id'       => $patient->id,
-                    'received_by'      => Auth::id(),
-                    'amount'           => $grandTotal,
-                    'payment_method'   => $validated['payment_method'],
-                    'reference_number' => $ticketNumber,
-                    'notes'            => 'Venta POS Ticket #' . $ticketNumber . ($validated['notes'] ? ' - ' . $validated['notes'] : ''),
-                    'payment_date'     => now(),
+            // Register payment in ERP Financials (desacoplado de la ficha de paciente si es mostrador)
+            $payment = Payment::create([
+                'tenant_id'        => $tenantId,
+                'patient_id'       => $patient?->id, // NULL si es cliente mostrador
+                'customer_name'    => $customerName,
+                'customer_ci'      => $customerCi,
+                'received_by'      => Auth::id(),
+                'amount'           => $grandTotal,
+                'payment_method'   => $validated['payment_method'],
+                'reference_number' => $ticketNumber,
+                'notes'            => 'Venta Farmacia/POS Ticket #' . $ticketNumber . ($validated['notes'] ? ' - ' . $validated['notes'] : ''),
+                'payment_date'     => now(),
+            ]);
+
+            foreach ($processedItems as $pItem) {
+                $payment->items()->create([
+                    'tenant_id'   => $tenantId,
+                    'description' => $pItem['name'] . ' (x' . $pItem['quantity'] . ' ' . $pItem['unit'] . ')',
+                    'amount'      => $pItem['total'],
                 ]);
-
-                foreach ($processedItems as $pItem) {
-                    $payment->items()->create([
-                        'tenant_id'   => $tenantId,
-                        'description' => $pItem['name'] . ' (x' . $pItem['quantity'] . ' ' . $pItem['unit'] . ')',
-                        'amount'      => $pItem['total'],
-                    ]);
-                }
-
-                if (!empty($validated['account_id'])) {
-                    AccountingEntryService::recordPaymentEntry(
-                        tenantId: $tenantId,
-                        payment: $payment,
-                        description: 'Ingreso por Venta POS #' . $ticketNumber . ' - ' . $patient->first_name,
-                        accountAssetId: $validated['account_id'],
-                        incomeAccountCode: '4400'
-                    );
-                }
             }
+
+            // Registro contable automático (Caja/Banco -> Ingresos Farmacia/Insumos)
+            AccountingEntryService::recordPaymentEntry(
+                tenantId: $tenantId,
+                payment: $payment,
+                description: 'Ingreso por Venta Farmacia / POS #' . $ticketNumber . ' - ' . $customerName,
+                accountAssetId: $validated['account_id'] ?? null,
+                incomeAccountCode: '4400'
+            );
 
             $tenant = Tenant::find($tenantId);
 
             return [
                 'ticket_number'   => $ticketNumber,
                 'date'            => now()->format('d/m/Y H:i'),
-                'patient_name'    => $patient ? trim($patient->first_name . ' ' . $patient->last_name) : ($validated['patient_name'] ?: 'Cliente Mostrador'),
-                'patient_ci'      => $patient?->national_id ?? $validated['patient_ci'] ?? null,
+                'patient_name'    => $customerName,
+                'patient_ci'      => $customerCi,
                 'payment_method'  => $validated['payment_method'],
                 'items'           => $processedItems,
                 'subtotal'        => $totalSubtotal,
@@ -410,7 +403,7 @@ class InventoryController extends Controller
                 'received_amount' => $receivedAmount,
                 'change_amount'   => $changeAmount,
                 'notes'           => $validated['notes'] ?? null,
-                'payment_id'      => $payment?->id,
+                'payment_id'      => $payment->id,
                 'cashier'         => Auth::user()?->name ?? 'Cajero',
                 'clinic'          => [
                     'name'     => $tenant?->name ?? 'Clínica',

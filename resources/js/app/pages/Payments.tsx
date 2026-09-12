@@ -30,6 +30,8 @@ interface PaymentRecord  {
   payment_date: string | null;
   created_at: string;
   notes: string | null;
+  customer_name?: string | null;
+  customer_ci?: string | null;
   patient?:  { id: string; first_name: string; last_name: string; national_id: string | null; } | null;
   items?: PaymentItem[];
 }
@@ -250,19 +252,36 @@ export default function Payments({ payments, patients, accounts, flash }: Props)
                 </TableHeader>
                 <TableBody>
                   {payments.map((payment) => {
-                    const firstName = payment.patient?.first_name ?? '?';
-                    const lastName  = payment.patient?.last_name  ?? '';
+                    const isWalkin = !payment.patient && Boolean(payment.customer_name);
+                    const displayName = payment.patient 
+                      ? `${payment.patient.first_name} ${payment.patient.last_name}`.trim()
+                      : (payment.customer_name || 'Cliente Mostrador');
+                    const displayCi = payment.patient?.national_id ?? payment.customer_ci;
+                    const initialsText = payment.patient 
+                      ? initials(payment.patient.first_name, payment.patient.last_name)
+                      : (payment.customer_name ? payment.customer_name.substring(0, 2).toUpperCase() : 'CM');
                     const itemsDesc = payment.items?.map(i => i.description).join(', ') || 'Pago';
                     return (
                       <TableRow key={payment.id} className="border-b border-[#F3F4F6] dark:border-[#1E293B] hover:bg-[#F8FAFC] dark:hover:bg-[#1E293B]/60 transition-colors">
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded bg-gradient-to-br from-[#0284C7] to-[#075985] flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs text-white font-medium">{initials(firstName, lastName)}</span>
+                            <div className={`w-9 h-9 rounded flex items-center justify-center flex-shrink-0 ${
+                              isWalkin
+                                ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white'
+                                : 'bg-gradient-to-br from-[#0284C7] to-[#075985] text-white'
+                            }`}>
+                              <span className="text-xs font-medium">{initialsText}</span>
                             </div>
                             <div>
-                              <span className="text-[#111827] dark:text-[#F8FAFC] font-medium block">{firstName} {lastName}</span>
-                              {payment.patient?.national_id && <span className="text-xs text-[#6B7280] dark:text-[#94A3B8]">CI: {payment.patient.national_id}</span>}
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[#111827] dark:text-[#F8FAFC] font-medium block">{displayName}</span>
+                                {isWalkin && (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-200 dark:border-emerald-800/60">
+                                    Mostrador
+                                  </span>
+                                )}
+                              </div>
+                              {displayCi && <span className="text-xs text-[#6B7280] dark:text-[#94A3B8]">CI: {displayCi}</span>}
                             </div>
                           </div>
                         </TableCell>

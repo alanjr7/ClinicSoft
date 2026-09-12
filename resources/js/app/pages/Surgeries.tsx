@@ -520,9 +520,7 @@ export default function Surgeries({ surgeries, patients, staffDoctors, stats, fi
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
                 Cirugías y Quirófanos
               </h1>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
-                Registro de cirugías realizadas, agenda quirúrgica y visualización de intervenciones.
-              </p>
+             
             </div>
           </div>
         </div>
@@ -711,25 +709,6 @@ export default function Surgeries({ surgeries, patients, staffDoctors, stats, fi
                     })}
                   </div>
                 </CardContent>
-              </Card>
-
-              {/* Resumen del Día Seleccionado */}
-              <Card className="rounded-2xl bg-white dark:bg-[#0F172A] border border-gray-200/80 dark:border-gray-800 shadow-sm p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider font-semibold text-gray-400">Total en este día</p>
-                    <h4 className="text-2xl font-black text-gray-900 dark:text-white mt-0.5">{daySurgeries.length}</h4>
-                    <p className="text-xs text-sky-600 dark:text-sky-400 font-medium">{headerDateLabel}</p>
-                  </div>
-                  <Button
-                    onClick={handleOpenRegisterWithDate}
-                    size="sm"
-                    className="bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-sm text-xs cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5 mr-1" />
-                    + Cirugía en esta fecha
-                  </Button>
-                </div>
               </Card>
             </div>
 

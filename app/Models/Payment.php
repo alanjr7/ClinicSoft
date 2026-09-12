@@ -16,6 +16,8 @@ class Payment extends Model
         'tenant_id',
         'invoice_id',
         'patient_id',
+        'customer_name',
+        'customer_ci',
         'received_by',
         'payment_method',
         'amount',

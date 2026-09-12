@@ -58,9 +58,13 @@ class PaymentsExport implements FromQuery, WithHeadings, WithMapping, WithStyles
             'other'    => 'Otro',
         ];
 
+        $clientName = $payment->patient 
+            ? ($payment->patient->first_name . ' ' . $payment->patient->last_name) 
+            : ($payment->customer_name ?: 'Cliente Mostrador');
+
         return [
             $payment->payment_date ? $payment->payment_date->format('d/m/Y') : '',
-            $payment->patient ? $payment->patient->first_name . ' ' . $payment->patient->last_name : '',
+            $clientName,
             $payment->invoice ? $payment->invoice->invoice_number : '',
             $methodMap[$payment->payment_method] ?? ucfirst($payment->payment_method),
             number_format($payment->amount, 2),
