@@ -39,6 +39,7 @@ Route::middleware(['auth', 'checkTenant'])->group(function () {
 
     // Patients
     Route::get('/patients',           [PatientController::class, 'index'])->name('patients.index');
+    Route::post('/patients/quick',    [PatientController::class, 'quickStore'])->name('patients.quick');
     Route::get('/patients/{id}',      [PatientController::class, 'show'])->name('patients.show');
     Route::post('/patients',          [PatientController::class, 'store'])->name('patients.store');
     Route::put('/patients/{id}',      [PatientController::class, 'update'])->name('patients.update');

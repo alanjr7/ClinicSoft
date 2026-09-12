@@ -101,6 +101,65 @@ class PatientController extends Controller
         return redirect()->route('patients.index')->with('success', 'Paciente creado correctamente.');
     }
 
+    public function quickStore(Request $request)
+    {
+        $tenantId = $request->attributes->get('tenant_id');
+
+        $validated = $request->validate([
+            'full_name'   => 'nullable|string|max:200',
+            'first_name'  => 'nullable|string|max:100',
+            'last_name'   => 'nullable|string|max:100',
+            'national_id' => 'nullable|string|max:50',
+            'phone'       => 'nullable|string|max:50',
+        ]);
+
+        $firstName = trim($validated['first_name'] ?? '');
+        $lastName  = trim($validated['last_name'] ?? '');
+
+        if (!empty($validated['full_name'])) {
+            $parts = preg_split('/\s+/', trim($validated['full_name']));
+            if (count($parts) === 1) {
+                $firstName = $parts[0];
+                $lastName = '';
+            } else {
+                $firstName = array_shift($parts);
+                $lastName = implode(' ', $parts);
+            }
+        }
+
+        if (empty($firstName)) {
+            return response()->json([
+                'message' => 'El nombre completo es obligatorio.',
+                'errors' => ['full_name' => ['El nombre completo es obligatorio.']]
+            ], 422);
+        }
+
+        $patient = Patient::create([
+            'tenant_id'   => $tenantId,
+            'first_name'  => $firstName,
+            'last_name'   => $lastName,
+            'national_id' => !empty($validated['national_id']) ? trim($validated['national_id']) : null,
+            'phone'       => !empty($validated['phone']) ? trim($validated['phone']) : null,
+            'created_by'  => Auth::id(),
+            'is_active'   => true,
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'patient' => [
+                    'id'          => $patient->id,
+                    'first_name'  => $patient->first_name,
+                    'last_name'   => $patient->last_name,
+                    'national_id' => $patient->national_id,
+                ],
+                'message' => 'Paciente registrado rápidamente.',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Paciente creado correctamente.');
+    }
+
     public function update(Request $request, $id)
     {
         $tenantId = $request->attributes->get('tenant_id');

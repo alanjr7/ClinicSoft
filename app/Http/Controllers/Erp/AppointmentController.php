@@ -37,7 +37,7 @@ class AppointmentController extends Controller
 
         // Options for forms
         $patients = Patient::where('tenant_id', $tenantId)->where('is_active', true)
-            ->orderBy('last_name')->get(['id', 'first_name', 'last_name']);
+            ->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'national_id']);
 
         $dentists = TenantUser::where('tenant_id', $tenantId)
             ->whereIn('role', ['doctor', 'dentist', 'admin', 'owner'])

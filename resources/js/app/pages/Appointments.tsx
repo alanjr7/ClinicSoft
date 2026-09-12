@@ -14,6 +14,9 @@ import {
   Trash2,
   AlertCircle,
   Loader2,
+  UserPlus,
+  X,
+  Phone,
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -49,11 +52,11 @@ interface AppointmentListItem {
   end_at: string | null;
   status: AppointmentStatus;
   notes: string | null;
-  patient?: { id: string; first_name: string; last_name: string };
+  patient?: { id: string; first_name: string; last_name: string; national_id?: string | null };
   dentist?: { id: string; first_name: string; last_name: string };
 }
 
-interface PatientOption { id: string; first_name: string; last_name: string; }
+interface PatientOption { id: string; first_name: string; last_name: string; national_id?: string | null; }
 interface DentistOption  { id: string; name: string; }
 interface TreatmentOption { id: string; name: string; base_price: number; duration_minutes: number | null; }
 
@@ -243,12 +246,22 @@ export default function Appointments({ appointments: initialAppointments, patien
     window.localStorage.setItem(SELECTED_DATE_KEY, selectedDateKey);
   }, [selectedDateKey]);
 
-  // No more API fetches — appointments come from props.
+  // Patients list state (synced with props and augmented by quick patient creation)
+  const [patientList, setPatientList] = useState<PatientOption[]>(patients);
+
+  useEffect(() => {
+    setPatientList(patients);
+  }, [patients]);
+
+  // Patient creation toggle mode & fields
+  const [isNewPatientMode, setIsNewPatientMode] = useState(false);
+  const [quickFullName, setQuickFullName] = useState('');
+  const [quickNationalId, setQuickNationalId] = useState('');
+
   // Filter by selected date client-side:
-  const patientOpts = patients;
+  const patientOpts = patientList;
   const dentistOpts = dentists;
   const treatmentOpts = treatments;
-
 
   // ── Navegación de calendario ───────────────────────────────────────────────
   function prevMonth() {
@@ -267,19 +280,83 @@ export default function Appointments({ appointments: initialAppointments, patien
   function openNew() {
     setForm(emptyForm(selectedDateKey));
     setSaveError(null);
+    setIsNewPatientMode(false);
+    setQuickFullName('');
+    setQuickNationalId('');
     setShowModal(true);
   }
   function closeNew() {
     setShowModal(false);
     setSaveError(null);
+    setIsNewPatientMode(false);
+    setQuickFullName('');
+    setQuickNationalId('');
   }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.patient_id || !form.dentist_id) {
-      setSaveError("Selecciona paciente y dentista.");
+    setSaveError(null);
+
+    let finalPatientId = form.patient_id;
+
+    // Si está en modo nuevo paciente, crearlo primero vía /patients/quick
+    if (isNewPatientMode) {
+      if (!quickFullName.trim()) {
+        setSaveError("Ingresa el nombre completo del nuevo paciente.");
+        return;
+      }
+      setSaving(true);
+      try {
+        const metaCsrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
+        const cookieCsrf = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/)?.[1];
+        const csrfToken = metaCsrf || (cookieCsrf ? decodeURIComponent(cookieCsrf) : '');
+
+        const res = await fetch('/patients/quick', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({
+            full_name: quickFullName.trim(),
+            national_id: quickNationalId.trim() || null,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || data.error || 'Error al registrar el paciente.');
+        }
+
+        finalPatientId = data.patient.id;
+        const newP: PatientOption = {
+          id: data.patient.id,
+          first_name: data.patient.first_name,
+          last_name: data.patient.last_name || '',
+          national_id: data.patient.national_id || null,
+        };
+        setPatientList((prev) => [newP, ...prev.filter((p) => p.id !== newP.id)]);
+        setForm((f) => ({ ...f, patient_id: finalPatientId }));
+      } catch (err: any) {
+        setSaving(false);
+        setSaveError(err.message || 'Error al registrar el paciente.');
+        return;
+      }
+    } else {
+      if (!finalPatientId) {
+        setSaveError("Selecciona un paciente.");
+        return;
+      }
+    }
+
+    if (!form.dentist_id) {
+      setSaving(false);
+      setSaveError("Selecciona un médico / especialista.");
       return;
     }
+
     const start = combineDateTime(form.date, form.start_time);
     const end = new Date(start.getTime() + form.duration_minutes * 60_000);
     const endHours = String(end.getHours()).padStart(2, '0');
@@ -288,9 +365,8 @@ export default function Appointments({ appointments: initialAppointments, patien
     const endFormatted = `${toLocalDateKey(end)} ${endHours}:${endMinutes}:00`;
 
     setSaving(true);
-    setSaveError(null);
     router.post('/appointments', {
-      patient_id: form.patient_id,
+      patient_id: finalPatientId,
       dentist_id: form.dentist_id,
       start_at: startFormatted,
       end_at: endFormatted,
@@ -609,50 +685,133 @@ export default function Appointments({ appointments: initialAppointments, patien
           </DialogHeader>
 
           <form id="new-appointment-form" onSubmit={handleCreate} className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
-            {/* Paciente + dentista */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-sm text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
-                  Paciente <span className="text-[#EF4444]">*</span>
-                </Label>
-                <Select
-                  value={form.patient_id}
-                  onValueChange={(v) => setForm((f) => ({ ...f, patient_id: v }))}
-                >
-                  <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#0284C7] focus:ring-1 focus:ring-[#0284C7]">
-                    <SelectValue placeholder={patientOpts.length ? "Seleccionar paciente..." : "Sin pacientes"} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]">
-                    {patientOpts.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.first_name} {p.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* 1. Datos del Paciente */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-[#0284C7]" />
+                  <span className="text-sm font-bold text-[#111827] dark:text-[#F8FAFC]">
+                    1. Datos del Paciente
+                  </span>
+                </div>
+                {isNewPatientMode ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsNewPatientMode(false);
+                      setSaveError(null);
+                    }}
+                    className="text-xs font-semibold text-[#0284C7] dark:text-[#38BDF8] hover:underline cursor-pointer"
+                  >
+                    Buscar en Pacientes Existentes
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsNewPatientMode(true);
+                      setSaveError(null);
+                    }}
+                    className="text-xs font-semibold text-[#0284C7] dark:text-[#38BDF8] hover:text-[#0369A1] dark:hover:text-[#7DD3FC] flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>+ Paciente Nuevo (Rápido)</span>
+                  </button>
+                )}
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
-                  <Stethoscope className="w-3.5 h-3.5" />
-                  Médico / Especialista <span className="text-[#EF4444]">*</span>
-                </Label>
-                <Select
-                  value={form.dentist_id}
-                  onValueChange={(v) => setForm((f) => ({ ...f, dentist_id: v }))}
-                >
-                  <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#0284C7] focus:ring-1 focus:ring-[#0284C7]">
-                    <SelectValue placeholder={dentistOpts.length ? "Seleccionar médico..." : "Sin médicos asignados"} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]">
-                    {dentistOpts.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        Dr. {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
+              <Separator className="dark:bg-[#1E293B]" />
+
+              {isNewPatientMode ? (
+                /* Modo Paciente Nuevo: 2 inputs (Nombre completo y Carnet/CI opcional) */
+                <div className="p-4 rounded-xl bg-[#F0F9FF]/60 dark:bg-sky-950/20 border border-[#BAE6FD] dark:border-sky-900/40 space-y-3 animate-in fade-in duration-150">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-[#374151] dark:text-gray-200">
+                        Nombre Completo <span className="text-[#EF4444]">*</span>
+                      </Label>
+                      <Input
+                        autoFocus
+                        placeholder="Ej. Juan Pérez"
+                        value={quickFullName}
+                        onChange={(e) => setQuickFullName(e.target.value)}
+                        className="h-10 text-sm rounded-xl border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#0284C7] focus:ring-1 focus:ring-[#0284C7]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold text-[#374151] dark:text-gray-200">
+                        Carnet / C.I. <span className="text-[#9CA3AF] font-normal">(Opcional)</span>
+                      </Label>
+                      <Input
+                        placeholder="Ej. 7894561 LP"
+                        value={quickNationalId}
+                        onChange={(e) => setQuickNationalId(e.target.value)}
+                        className="h-10 text-sm rounded-xl border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#0284C7] focus:ring-1 focus:ring-[#0284C7]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Modo Paciente Existente: Selector simple */
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold text-[#374151] dark:text-gray-200">
+                    Seleccionar Paciente <span className="text-[#EF4444]">*</span>
+                  </Label>
+                  <Select
+                    value={form.patient_id}
+                    onValueChange={(v) => {
+                      if (v === '__new_quick__') {
+                        setIsNewPatientMode(true);
+                      } else {
+                        setForm((f) => ({ ...f, patient_id: v }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#0284C7] focus:ring-1 focus:ring-[#0284C7]">
+                      <SelectValue placeholder="Selecciona el paciente..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC] max-h-60">
+                      {patientOpts.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.first_name} {p.last_name} {p.national_id ? `(CI: ${p.national_id})` : ''}
+                        </SelectItem>
+                      ))}
+                      <div
+                        onClick={() => setIsNewPatientMode(true)}
+                        className="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-[#0284C7] dark:text-[#38BDF8] hover:bg-sky-50 dark:hover:bg-sky-950/40 rounded-md cursor-pointer mt-1 border-t border-[#F3F4F6] dark:border-[#1E293B]"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Registrar nuevo paciente rápido</span>
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <Separator className="dark:bg-[#1E293B]" />
+
+            {/* 2. Médico / Especialista */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
+                <Stethoscope className="w-3.5 h-3.5 text-[#0284C7]" />
+                Médico / Especialista <span className="text-[#EF4444]">*</span>
+              </Label>
+              <Select
+                value={form.dentist_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, dentist_id: v }))}
+              >
+                <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#0284C7] focus:ring-1 focus:ring-[#0284C7]">
+                  <SelectValue placeholder={dentistOpts.length ? "Seleccionar médico..." : "Sin médicos asignados"} />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]">
+                  {dentistOpts.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      Dr. {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <Separator className="dark:bg-[#1E293B]" />
