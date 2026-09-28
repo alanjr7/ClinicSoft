@@ -146,8 +146,9 @@ export default function Patients({ patients, filters }: Props) {
         setForm(EMPTY_FORM);
         setActiveSection("personal");
       },
-      onError: () => {
-        setSaveError("Ocurrió un error al guardar el paciente. Verifica los datos.");
+      onError: (errors) => {
+        const first = Object.values(errors)[0];
+        setSaveError(typeof first === 'string' ? first : "Ocurrió un error al guardar el paciente. Verifica los datos.");
       },
       onFinish: () => setSaving(false),
     });
