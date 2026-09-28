@@ -364,7 +364,7 @@
 
   {{-- ── 5. PIE DE PÁGINA ── --}}
   <div class="footer">
-    {{ $tenant->name }} · Documento Médico Confidencial · Impreso el {{ now()->format('d/m/Y H:i') }} · Sistema DentalSoft
+    {{ $tenant->name }} · Documento Médico Confidencial · Impreso el {{ now()->format('d/m/Y H:i') }} · Sistema ClinicSoft
   </div>
 
 </div>

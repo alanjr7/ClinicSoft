@@ -47,10 +47,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 <div className="p-5 border-b border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                            <img src="/images/logo.png" alt="DentalSoft Logo" className="w-full h-full object-contain" />
+                            <img src="/images/logo.png" alt="ClinicSoft Logo" className="w-full h-full object-contain" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-white font-semibold text-sm truncate">DentalSoft</p>
+                            <p className="text-white font-semibold text-sm truncate">ClinicSoft</p>
                             <p className="text-[#94A3B8] text-[11px] truncate">Panel SuperAdmin</p>
                         </div>
                     </div>
@@ -113,10 +113,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[#0F172A] border-b border-[#1E293B] shrink-0 text-white">
                     <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                            <img src="/images/logo.png" alt="DentalSoft Logo" className="w-full h-full object-contain" />
+                            <img src="/images/logo.png" alt="ClinicSoft Logo" className="w-full h-full object-contain" />
                         </div>
                         <div className="min-w-0">
-                            <span className="text-sm font-bold text-white block leading-tight truncate">DentalSoft</span>
+                            <span className="text-sm font-bold text-white block leading-tight truncate">ClinicSoft</span>
                             <span className="text-[10px] text-[#14B8A6] font-semibold tracking-wider uppercase block">SuperAdmin</span>
                         </div>
                     </div>

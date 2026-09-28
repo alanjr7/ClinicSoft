@@ -44,7 +44,7 @@ export default function SuperAdminDashboard({ tenants, demoLeads = [], totalDemo
 
     const formatWhatsAppUrl = (phone: string, name: string) => {
         const cleanPhone = phone.replace(/[^0-9]/g, '');
-        const message = encodeURIComponent(`Hola ${name}, vimos que ingresaste al modo prueba de DentalSoft. ¿Te gustaría agendar una demo guiada o tienes alguna consulta?`);
+        const message = encodeURIComponent(`Hola ${name}, vimos que ingresaste al modo prueba de ClinicSoft. ¿Te gustaría agendar una demo guiada o tienes alguna consulta?`);
         return `https://wa.me/${cleanPhone}?text=${message}`;
     };
 

@@ -65,10 +65,10 @@ export default function Login() {
           {/* Logo y título */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 mb-3">
-              <img src="/images/logo.png" alt="DentalSoft Logo" className="w-full h-full object-contain" />
+              <img src="/images/logo.png" alt="ClinicSoft Logo" className="w-full h-full object-contain" />
             </div>
-            <h1 className="text-3xl font-extrabold text-[#111827] dark:text-white tracking-tight">DentalSoft</h1>
-            <p className="text-[#6B7280] dark:text-[#94A3B8] text-sm mt-1">Software Odontológico en la Nube</p>
+            <h1 className="text-3xl font-extrabold text-[#111827] dark:text-white tracking-tight">ClinicSoft</h1>
+            <p className="text-[#6B7280] dark:text-[#94A3B8] text-sm mt-1">Software Médico y Clínico en la Nube</p>
           </div>
 
           {/* Formulario */}
@@ -88,7 +88,7 @@ export default function Login() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="usuario@dentalsoft.com"
+                    placeholder="usuario@clinicsoft.com"
                     value={data.email}
                     onChange={(e) => setData('email', e.target.value)}
                     className="pl-10 h-11 rounded-xl border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#0F172A] focus:border-[#14B8A6] focus:ring-[#14B8A6] text-sm"
@@ -175,7 +175,7 @@ export default function Login() {
           </div>
 
           <p className="text-center text-xs text-[#9CA3AF] mt-8">
-            © 2026 DentalSoft SaaS. Todos los derechos reservados.
+            © 2026 ClinicSoft SaaS. Todos los derechos reservados.
           </p>
         </div>
       </div>
@@ -192,7 +192,7 @@ export default function Login() {
         <div className="relative z-10 w-full max-w-xl flex items-center justify-center">
           <img
             src="/images/dental-examination-report.svg"
-            alt="DentalSoft Animation"
+            alt="ClinicSoft Animation"
             className="w-full max-h-[580px] object-contain drop-shadow-xl select-none"
           />
         </div>

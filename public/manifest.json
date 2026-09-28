@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "DentalSoft",
-  "short_name": "DentalSoft",
-  "description": "Dental Clinic Management Software",
+  "name": "ClinicSoft",
+  "short_name": "ClinicSoft",
+  "description": "Clinic Management Software",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

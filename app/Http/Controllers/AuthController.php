@@ -92,8 +92,8 @@ class AuthController extends Controller
             ['slug' => 'demo-dental'],
             [
                 'plan_id'           => $planId,
-                'name'              => !empty($validated['company_name']) ? $validated['company_name'] . ' (Demo)' : 'Clínica Dental Demo',
-                'email'             => 'demo@dentalsoft.app',
+                'name'              => !empty($validated['company_name']) ? $validated['company_name'] . ' (Demo)' : 'Clínica Demo',
+                'email'             => 'demo@clinicsoft.app',
                 'phone'             => $validated['whatsapp'],
                 'status'            => 'active',
                 'currency'          => 'Bs.',
@@ -120,7 +120,7 @@ class AuthController extends Controller
         $lastName = $parts[1] ?? 'Demo';
 
         $demoUser = User::firstOrCreate(
-            ['email' => 'demo@dentalsoft.app'],
+            ['email' => 'demo@clinicsoft.app'],
             [
                 'first_name'  => $firstName,
                 'last_name'   => $lastName,

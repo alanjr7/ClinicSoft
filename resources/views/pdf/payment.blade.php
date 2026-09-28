@@ -428,7 +428,7 @@
 
   {{-- ── 6. PIE DE PÁGINA ── --}}
   <div class="footer">
-    {{ $tenant->name }} · Recibo emitido el {{ now()->format('d/m/Y H:i') }} · Sistema DentalSoft
+    {{ $tenant->name }} · Recibo emitido el {{ now()->format('d/m/Y H:i') }} · Sistema ClinicSoft
   </div>
 
 </div>

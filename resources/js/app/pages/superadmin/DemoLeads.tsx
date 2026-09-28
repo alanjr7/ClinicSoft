@@ -35,7 +35,7 @@ export default function DemoLeads({ leads = [] }: Props) {
 
     const formatWhatsAppUrl = (phone: string, name: string) => {
         const cleanPhone = phone.replace(/[^0-9]/g, '');
-        const message = encodeURIComponent(`Hola ${name}, te saludamos desde DentalSoft. Vimos que iniciaste el modo prueba. ¿En qué podemos ayudarte para comenzar a usar la plataforma en tu clínica?`);
+        const message = encodeURIComponent(`Hola ${name}, te saludamos desde ClinicSoft. Vimos que iniciaste el modo prueba. ¿En qué podemos ayudarte para comenzar a usar la plataforma en tu clínica?`);
         return `https://wa.me/${cleanPhone}?text=${message}`;
     };
 

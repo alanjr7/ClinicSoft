@@ -429,7 +429,7 @@ export default function Areas({ areas, availableTenants }: Props) {
                                 </Label>
                                 <Input
                                     type="email"
-                                    placeholder="area@dentalsoft.app"
+                                    placeholder="area@clinicsoft.app"
                                     value={createForm.email}
                                     onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                                     className="mt-1 text-xs"

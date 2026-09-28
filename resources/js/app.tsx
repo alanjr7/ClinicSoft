@@ -5,7 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import './styles/index.css';
 
 createInertiaApp({
-    title: (title) => title ? `${title} — DentalSoft` : 'DentalSoft',
+    title: (title) => title ? `${title} — ClinicSoft` : 'ClinicSoft',
     resolve: (name) =>
         resolvePageComponent(
             `./app/pages/${name}.tsx`,
