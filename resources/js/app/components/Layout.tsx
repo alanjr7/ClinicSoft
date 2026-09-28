@@ -110,11 +110,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <Stethoscope className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
-                            <span className="text-sm font-bold text-[#111827] dark:text-white block leading-snug truncate" title={user?.tenant_name || 'ClinicasSoft'}>
-                                {user?.tenant_name || 'ClinicasSoft'}
+                            <span className="text-sm font-bold text-[#111827] dark:text-white block leading-snug truncate" title={user?.tenant_name || 'ClinicSoft'}>
+                                {user?.tenant_name || 'ClinicSoft'}
                             </span>
                             <span className="text-[10px] text-[#0284C7] dark:text-[#38BDF8] font-semibold tracking-wider uppercase block">
-                                ClinicasSoft SaaS
+                                ClinicSoft SaaS
                             </span>
                         </div>
                     </div>
@@ -205,17 +205,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                 <Sparkles className="w-3 h-3" /> Modo Demostración
                             </span>
                             <span className="font-medium text-white/95">
-                                Estás navegando en un entorno de prueba interactivo de ClinicasSoft.
+                                Estás navegando en un entorno de prueba interactivo de ClinicSoft.
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
                             <a
-                                href={`https://wa.me/59172651615?text=${encodeURIComponent(`Hola, estoy probando la demo de ClinicasSoft${user?.first_name ? ` (Soy ${user.first_name} ${user.last_name})` : ''} y deseo contratar el servicio para mi clínica médica.`)}`}
+                                href={`https://wa.me/59172651615?text=${encodeURIComponent(`Hola, estoy probando la demo de ClinicSoft${user?.first_name ? ` (Soy ${user.first_name} ${user.last_name})` : ''} y deseo contratar el servicio para mi clínica médica.`)}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="bg-white text-sky-800 hover:bg-sky-50 font-bold px-3 py-1 rounded-lg transition-colors shadow-sm text-xs cursor-pointer inline-flex items-center gap-1.5"
                             >
-                                ⭐ Contratar ClinicasSoft
+                                ⭐ Contratar ClinicSoft
                             </a>
                             <button
                                 onClick={logout}
@@ -234,7 +234,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <Stethoscope className="w-4 h-4" />
                         </div>
                         <span className="text-base font-semibold text-[#111827] dark:text-white truncate max-w-[180px]">
-                            {user?.tenant_name || 'ClinicasSoft'}
+                            {user?.tenant_name || 'ClinicSoft'}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
