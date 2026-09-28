@@ -59,9 +59,12 @@ class HandleInertiaRequests extends Middleware
                 $tenantId   = $tenantUser?->tenant_id;
                 $tenantName = $tenantUser?->tenant?->name;
                 $role       = $tenantUser?->role;
+                if ($role === 'dentist') {
+                    $role = 'doctor';
+                }
 
                 $permissions = [];
-                if ($role === 'staff' && $tenantId) {
+                if (in_array($role, ['doctor', 'staff', 'asistente']) && $tenantId) {
                     $permissions = $user->modulePermissions()
                         ->where('tenant_id', $tenantId)
                         ->where('is_enabled', true)

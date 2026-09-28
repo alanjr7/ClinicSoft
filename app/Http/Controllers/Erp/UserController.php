@@ -26,7 +26,13 @@ class UserController extends Controller
         $isAdmin = $callerTu && in_array($callerTu->role, ['admin', 'owner']);
 
         $users = TenantUser::where('tenant_id', $tenantId)
-            ->with(['user.doctorProfile', 'user:id,first_name,last_name,email,phone,avatar_url,is_active,encrypted_password'])
+            ->with([
+                'user.doctorProfile',
+                'user.modulePermissions' => function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId);
+                },
+                'user:id,first_name,last_name,email,phone,avatar_url,is_active,encrypted_password'
+            ])
             ->get()
             ->map(function ($tu) use ($isAdmin) {
                 $plainPassword = null;
@@ -41,6 +47,19 @@ class UserController extends Controller
 
                 $docProfile = $tu->user?->doctorProfile;
 
+                $userPermissions = $tu->user?->modulePermissions
+                    ? $tu->user->modulePermissions
+                        ->where('tenant_id', $tu->tenant_id)
+                        ->map(fn($p) => [
+                            'module' => $p->module,
+                            'is_enabled' => (bool) $p->is_enabled,
+                        ])
+                        ->values()
+                        ->all()
+                    : [];
+
+                $role = in_array($tu->role, ['dentist', 'doctor']) ? 'doctor' : ($tu->role === 'receptionist' ? 'staff' : $tu->role);
+
                 return [
                     'id'             => $tu->user_id,
                     'first_name'     => $tu->user?->first_name,
@@ -48,11 +67,12 @@ class UserController extends Controller
                     'email'          => $tu->user?->email,
                     'phone'          => $tu->user?->phone,
                     'avatar_url'     => $tu->user?->avatar_url,
-                    'role'           => $tu->role === 'dentist' ? 'doctor' : $tu->role,
+                    'role'           => $role,
                     'specialty'      => $docProfile?->specialty,
                     'license_number' => $docProfile?->license_number,
                     'is_active'      => (bool) ($tu->is_active && $tu->user?->is_active),
                     'plain_password' => $plainPassword,
+                    'permissions'    => $userPermissions,
                 ];
             });
 
@@ -189,7 +209,7 @@ class UserController extends Controller
             'first_name' => 'required|string|max:100',
             'last_name'  => 'required|string|max:100',
             'phone'      => 'nullable|string|max:30',
-            'role'       => 'required|string|in:owner,admin,doctor,dentist,staff,receptionist',
+            'role'       => 'required|string|in:owner,admin,doctor,staff',
             'specialty'  => 'nullable|string|max:150',
             'license_number' => 'nullable|string|max:100',
         ]);
@@ -210,7 +230,7 @@ class UserController extends Controller
                 'is_active' => true,
             ]);
 
-            if (in_array($validated['role'], ['doctor', 'dentist']) || !empty($validated['specialty'])) {
+            if ($validated['role'] === 'doctor' || !empty($validated['specialty'])) {
                 \App\Models\DoctorProfile::create([
                     'tenant_id'      => $tenantId,
                     'user_id'        => $user->id,
@@ -232,7 +252,7 @@ class UserController extends Controller
             'first_name' => 'nullable|string|max:100',
             'last_name'  => 'nullable|string|max:100',
             'phone'      => 'nullable|string|max:30',
-            'role'       => 'nullable|string|in:owner,admin,doctor,dentist,staff,receptionist',
+            'role'       => 'nullable|string|in:owner,admin,doctor,staff',
             'is_active'  => 'nullable|boolean',
             'specialty'  => 'nullable|string|max:150',
             'license_number' => 'nullable|string|max:100',

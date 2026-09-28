@@ -9,8 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('payment_items', function (Blueprint $table) {
-            $table->decimal('quantity', 10, 2)->default(1)->after('description');
-            $table->decimal('unit_price', 12, 2)->default(0)->after('quantity');
+            if (!Schema::hasColumn('payment_items', 'quantity')) {
+                $table->decimal('quantity', 10, 2)->default(1)->after('description');
+            }
+            if (!Schema::hasColumn('payment_items', 'unit_price')) {
+                $table->decimal('unit_price', 12, 2)->default(0)->after('quantity');
+            }
         });
     }
 

@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Strictness & Path aliases */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+
+    "paths": {
+      "@/*": ["./resources/js/*"]
+    }
+  },
+  "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx", "resources/js/**/*.d.ts"],
+  "exclude": [
+    "resources/js/main.tsx",
+    "resources/js/app/routes.tsx",
+    "resources/js/app/App.tsx",
+    "resources/js/lib/**",
+    "resources/js/components/ProtectedRoute.tsx",
+    "resources/js/context/AuthContext.tsx"
+  ]
+}
