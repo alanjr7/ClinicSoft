@@ -214,6 +214,9 @@ class FinancialController extends Controller
         $patients = Patient::where('tenant_id', $tenantId)->where('is_active', true)
             ->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'national_id']);
 
+        $treatments = Treatment::where('tenant_id', $tenantId)->where('is_active', true)
+            ->orderBy('name')->get(['id', 'name', 'base_price']);
+
         $accountingAccounts = \App\Models\AccountingAccount::where('tenant_id', $tenantId)
             ->where('is_active', true)
             ->where('type', 'asset')
@@ -221,9 +224,10 @@ class FinancialController extends Controller
             ->get(['id', 'code', 'name']);
 
         return Inertia::render('Payments', [
-            'payments' => $payments,
-            'patients' => $patients,
-            'accounts' => $accountingAccounts,
+            'payments'   => $payments,
+            'patients'   => $patients,
+            'treatments' => $treatments,
+            'accounts'   => $accountingAccounts,
         ]);
     }
 
@@ -232,16 +236,18 @@ class FinancialController extends Controller
         $tenantId = $request->attributes->get('tenant_id');
 
         $validated = $request->validate([
-            'patient_id'     => 'nullable|exists:patients,id',
-            'patient_name'   => 'nullable|string',
-            'patient_ci'     => 'nullable|string',
-            'amount'         => 'required|numeric|min:0',
-            'payment_method' => 'required|string',
-            'notes'          => 'nullable|string',
-            'items'          => 'required|array|min:1',
+            'patient_id'          => 'nullable|exists:patients,id',
+            'patient_name'        => 'nullable|string',
+            'patient_ci'          => 'nullable|string',
+            'amount'              => 'nullable|numeric|min:0',
+            'payment_method'      => 'required|string',
+            'notes'               => 'nullable|string',
+            'items'               => 'required|array|min:1',
             'items.*.description' => 'required|string',
-            'items.*.amount'      => 'required|numeric|min:0',
-            'account_id'     => 'nullable|exists:accounting_accounts,id',
+            'items.*.quantity'    => 'required|numeric|min:0.01',
+            'items.*.unit_price'  => 'required|numeric|min:0',
+            'items.*.amount'      => 'nullable|numeric|min:0',
+            'account_id'          => 'nullable|exists:accounting_accounts,id',
         ]);
 
         $payment = DB::transaction(function () use ($validated, $tenantId) {
@@ -274,7 +280,22 @@ class FinancialController extends Controller
                 abort(400, 'Se requiere el paciente');
             }
 
-            $totalAmount = collect($validated['items'])->sum('amount');
+            $calculatedItems = collect($validated['items'])->map(function ($item) {
+                $qty = (float) ($item['quantity'] ?? 1);
+                $unitPrice = (float) ($item['unit_price'] ?? 0);
+                $amount = isset($item['amount']) && is_numeric($item['amount']) && (float)$item['amount'] > 0
+                    ? (float) $item['amount']
+                    : round($qty * $unitPrice, 2);
+
+                return [
+                    'description' => $item['description'],
+                    'quantity'    => $qty,
+                    'unit_price'  => $unitPrice,
+                    'amount'      => $amount,
+                ];
+            });
+
+            $totalAmount = $calculatedItems->sum('amount');
 
             $payment = Payment::create([
                 'tenant_id'      => $tenantId,
@@ -286,11 +307,13 @@ class FinancialController extends Controller
                 'payment_date'   => now(),
             ]);
 
-            foreach ($validated['items'] as $item) {
+            foreach ($calculatedItems as $item) {
                 $payment->items()->create([
-                    'tenant_id' => $tenantId,
+                    'tenant_id'   => $tenantId,
                     'description' => $item['description'],
-                    'amount' => $item['amount'],
+                    'quantity'    => $item['quantity'],
+                    'unit_price'  => $item['unit_price'],
+                    'amount'      => $item['amount'],
                 ]);
             }
 
