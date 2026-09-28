@@ -495,7 +495,7 @@ export default function Payments({ payments, patients, treatments = [], accounts
                         <label className="sm:hidden text-xs text-gray-500 font-medium mb-1 block">Procedimiento</label>
                         <Input
                           list="clinic-treatments-list"
-                          placeholder="Ej. Limpieza dental"
+                          placeholder="Ej. Consulta"
                           value={item.description}
                           onChange={(e) => updateItem(index, 'description', e.target.value)}
                           className="rounded-xl h-10 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC]"
