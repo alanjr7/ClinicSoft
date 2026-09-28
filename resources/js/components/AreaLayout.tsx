@@ -71,8 +71,8 @@ export default function AreaLayout({ children }: { children: React.ReactNode }) 
                 {/* Logo & Header */}
                 <div className="p-5 border-b border-white/10 flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
-                            <Network className="w-5 h-5" />
+                        <div className="w-10 h-10 rounded-xl bg-white/10 p-1 flex items-center justify-center shrink-0 shadow-md border border-white/10">
+                            <img src="/images/logo.png" alt="ClinicSoft Logo" className="w-full h-full object-contain" />
                         </div>
                         <div className="min-w-0">
                             <p className="text-white font-bold text-sm truncate" title={areaDisplayName}>

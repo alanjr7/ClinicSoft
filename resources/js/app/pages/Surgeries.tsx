@@ -206,6 +206,8 @@ function parseSurgeryDate(val: string): Date {
   return new Date(val);
 }
 
+Surgeries.layout = (page: React.ReactNode) => <Layout>{page}</Layout>;
+
 export default function Surgeries({ surgeries, patients, staffDoctors, stats, filters }: Props) {
   const [activeTab, setActiveTab] = useState<'calendar' | 'register'>('calendar');
 

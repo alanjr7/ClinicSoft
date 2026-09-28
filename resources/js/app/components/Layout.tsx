@@ -106,8 +106,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {/* Logo and Mobile Close */}
                 <div className="p-5 border-b border-[#F3F4F6] dark:border-[#1E293B] flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-sky-400 flex items-center justify-center shrink-0 shadow-md shadow-sky-500/20 text-white">
-                            <Stethoscope className="w-5 h-5" />
+                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 p-1 flex items-center justify-center shrink-0 shadow-md border border-gray-100 dark:border-slate-700/60">
+                            <img src="/images/logo.png" alt="ClinicSoft Logo" className="w-full h-full object-contain" />
                         </div>
                         <div className="min-w-0">
                             <span className="text-sm font-bold text-[#111827] dark:text-white block leading-snug truncate" title={user?.tenant_name || 'ClinicSoft'}>
@@ -230,8 +230,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {/* Mobile Header */}
                 <div className="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-[#0F172A] border-b border-[#F3F4F6] dark:border-[#1E293B] shrink-0">
                     <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 rounded-lg bg-sky-600 text-white flex items-center justify-center shrink-0">
-                            <Stethoscope className="w-4 h-4" />
+                        <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 p-0.5 flex items-center justify-center shrink-0 border border-gray-100 dark:border-slate-700/60 shadow-sm">
+                            <img src="/images/logo.png" alt="ClinicSoft Logo" className="w-full h-full object-contain" />
                         </div>
                         <span className="text-base font-semibold text-[#111827] dark:text-white truncate max-w-[180px]">
                             {user?.tenant_name || 'ClinicSoft'}
