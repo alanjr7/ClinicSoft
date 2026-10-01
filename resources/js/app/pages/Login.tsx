@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
+import { Lottie } from 'lottie-react';
+import doctorAnimation from '../../../../public/json_icono/Doctor.json';
 import {
   Mail, Lock, AlertCircle, Sparkles, User, Phone, Building2,
   Loader2, CheckCircle2, ArrowRight
@@ -181,19 +183,20 @@ export default function Login() {
       </div>
 
       {/* ────────────────────────────────────────────────────────────────────────── */}
-      {/* LADO DERECHO: SVG ANIMADO ÚNICAMENTE (Sin texto, 50% de la pantalla)        */}
+      {/* LADO DERECHO: ANIMACIÓN LOTTIE (Doctor.json)                              */}
       {/* ────────────────────────────────────────────────────────────────────────── */}
       <div className="hidden lg:flex flex-col justify-center items-center bg-gradient-to-br from-[#F0FDFA] via-[#CCFBF1]/40 to-[#F8FAFC] dark:from-[#0F172A] dark:via-[#134E4A]/20 dark:to-[#0B1120] border-l border-[#F3F4F6] dark:border-[#1E293B] p-12 relative overflow-hidden">
         {/* Ambient Glow */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-300/20 dark:bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-300/20 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* SVG Animado Limpio sin texto */}
+        {/* Animación Lottie */}
         <div className="relative z-10 w-full max-w-xl flex items-center justify-center">
-          <img
-            src="/images/dental-examination-report.svg"
-            alt="ClinicSoft Animation"
-            className="w-full max-h-[580px] object-contain drop-shadow-xl select-none"
+          <Lottie
+            src={doctorAnimation}
+            loop={true}
+            autoplay={true}
+            className="w-full max-h-[580px] drop-shadow-xl select-none"
           />
         </div>
       </div>
