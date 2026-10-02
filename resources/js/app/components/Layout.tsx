@@ -1,13 +1,14 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import {
     LayoutDashboard, Users, Calendar, FileText, Scan,
-    FileSpreadsheet, CreditCard, Package, BarChart3, Settings, LogOut, BookOpen, Menu, X, Globe, Sparkles, Network, ArrowLeft, Stethoscope, Activity
+    FileSpreadsheet, CreditCard, Package, BarChart3, Settings, LogOut, BookOpen, Menu, X, Globe, Sparkles, Network, ArrowLeft, Stethoscope, Activity, PlayCircle
 } from 'lucide-react';
 import { useAuth, type AppModule } from '../../hooks/useAuth';
 import { useState, useEffect } from 'react';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { Toaster } from './ui/sonner';
 import { toast } from 'sonner';
+import { HelpTutorialAssistant } from './HelpTutorialAssistant';
 
 interface MenuItem {
     icon: React.ElementType;
@@ -30,6 +31,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     { icon: BarChart3,       label: 'Reportes',              path: '/reports',          module: 'reports' },
     { icon: Globe,           label: 'Portal de Reservas',    path: '/public-view',      module: 'appointments' },
     { icon: Settings,        label: 'Configuración',         path: '/settings' },
+    { icon: PlayCircle,      label: 'Chat Guía',             path: '/chat-guide' },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -47,6 +49,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const isDemoMode = Boolean(props?.is_demo_mode);
     const isAreaImpersonating = Boolean(props?.area_impersonation?.is_active);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isTutorialAssistantOpen, setIsTutorialAssistantOpen] = useState(false);
 
     // Notificaciones automáticas de flash y errores generales
     useEffect(() => {
@@ -254,6 +257,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     {children}
                 </div>
             </main>
+
+            {/* Asistente Interactivo de Tutoriales & Guía en Video */}
+            <HelpTutorialAssistant
+                isOpen={isTutorialAssistantOpen}
+                onClose={() => setIsTutorialAssistantOpen(false)}
+                showFloatingButton={false}
+            />
 
             <Toaster richColors position="top-right" />
         </div>

@@ -7,6 +7,8 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
+  UserPlus,
+  Sparkles,
   Stethoscope,
   FileText,
   CheckCircle,
@@ -49,12 +51,23 @@ interface AppointmentListItem {
   end_at: string | null;
   status: AppointmentStatus;
   notes: string | null;
-  patient?: { id: string; first_name: string; last_name: string };
+  patient?: { id: string; first_name: string; last_name: string; national_id?: string | null };
   dentist?: { id: string; first_name: string; last_name: string };
 }
 
-interface PatientOption { id: string; first_name: string; last_name: string; }
-interface DentistOption  { id: string; name: string; }
+interface PatientOption {
+  id: string;
+  first_name: string;
+  last_name: string;
+  national_id?: string | null;
+  phone?: string | null;
+}
+interface DentistOption  {
+  id: string;
+  name: string;
+  role?: string;
+  role_label?: string;
+}
 interface TreatmentOption { id: string; name: string; base_price: number; duration_minutes: number | null; }
 
 
@@ -224,13 +237,25 @@ export default function Appointments({ appointments: initialAppointments, patien
 
   // All appointments come from server; filter client-side by selected date
   const [appointments, setAppointments] = useState<AppointmentListItem[]>(initialAppointments);
+  const [patientList, setPatientList] = useState<PatientOption[]>(patients);
 
   useEffect(() => {
     setAppointments(initialAppointments);
   }, [initialAppointments]);
 
+  useEffect(() => {
+    setPatientList(patients);
+  }, [patients]);
+
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<NewApptForm>(() => emptyForm(toLocalDateKey(today)));
+  
+  // Quick patient registration states inside floating modal
+  const [isNewPatient, setIsNewPatient] = useState(false);
+  const [newPatientName, setNewPatientName] = useState('');
+  const [newPatientNationalId, setNewPatientNationalId] = useState('');
+  const [newPatientPhone, setNewPatientPhone] = useState('');
+
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -243,9 +268,8 @@ export default function Appointments({ appointments: initialAppointments, patien
     window.localStorage.setItem(SELECTED_DATE_KEY, selectedDateKey);
   }, [selectedDateKey]);
 
-  // No more API fetches — appointments come from props.
-  // Filter by selected date client-side:
-  const patientOpts = patients;
+  // Options
+  const patientOpts = patientList;
   const dentistOpts = dentists;
   const treatmentOpts = treatments;
 
@@ -266,20 +290,41 @@ export default function Appointments({ appointments: initialAppointments, patien
   // ── Crear cita ─────────────────────────────────────────────────────────────
   function openNew() {
     setForm(emptyForm(selectedDateKey));
+    setIsNewPatient(false);
+    setNewPatientName('');
+    setNewPatientNationalId('');
+    setNewPatientPhone('');
     setSaveError(null);
     setShowModal(true);
   }
   function closeNew() {
     setShowModal(false);
+    setIsNewPatient(false);
+    setNewPatientName('');
+    setNewPatientNationalId('');
+    setNewPatientPhone('');
     setSaveError(null);
   }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.patient_id || !form.dentist_id) {
-      setSaveError("Selecciona paciente y dentista.");
+    if (isNewPatient) {
+      if (!newPatientName.trim()) {
+        setSaveError("Ingresa el nombre del paciente a registrar.");
+        return;
+      }
+    } else {
+      if (!form.patient_id) {
+        setSaveError("Selecciona un paciente o regístralo como nuevo.");
+        return;
+      }
+    }
+
+    if (!form.dentist_id) {
+      setSaveError("Selecciona el doctor o personal encargado.");
       return;
     }
+
     const start = combineDateTime(form.date, form.start_time);
     const end = new Date(start.getTime() + form.duration_minutes * 60_000);
     const endHours = String(end.getHours()).padStart(2, '0');
@@ -290,7 +335,11 @@ export default function Appointments({ appointments: initialAppointments, patien
     setSaving(true);
     setSaveError(null);
     router.post('/appointments', {
-      patient_id: form.patient_id,
+      create_quick_patient: isNewPatient,
+      patient_id: isNewPatient ? null : form.patient_id,
+      new_patient_name: newPatientName.trim(),
+      new_patient_national_id: newPatientNationalId.trim() || null,
+      new_patient_phone: newPatientPhone.trim() || null,
       dentist_id: form.dentist_id,
       start_at: startFormatted,
       end_at: endFormatted,
@@ -305,7 +354,10 @@ export default function Appointments({ appointments: initialAppointments, patien
         }
         setShowModal(false);
       },
-      onError: () => setSaveError('No se pudo crear la cita. Verifica los datos.'),
+      onError: (errors) => {
+        const firstErr = Object.values(errors)[0] as string;
+        setSaveError(firstErr || 'No se pudo crear la cita. Verifica los datos.');
+      },
       onFinish: () => setSaving(false),
     });
   }
@@ -593,74 +645,188 @@ export default function Appointments({ appointments: initialAppointments, patien
 
       {/* ─────────────── New appointment modal ─────────────── */}
       <Dialog open={showModal} onOpenChange={(open) => (open ? setShowModal(true) : closeNew())}>
-        <DialogContent className="w-[95vw] max-w-2xl rounded-2xl p-0 overflow-hidden bg-white dark:bg-[#0F172A] text-[#111827] dark:text-[#F8FAFC] border dark:border-[#1E293B]">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#F3F4F6] dark:border-[#1E293B]">
+        <DialogContent className="w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl rounded-2xl p-0 overflow-hidden bg-white dark:bg-[#0F172A] text-[#111827] dark:text-[#F8FAFC] border dark:border-[#1E293B] shadow-2xl">
+          <DialogHeader className="px-7 pt-6 pb-4 border-b border-[#F3F4F6] dark:border-[#1E293B]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#14B8A6] to-[#0F766E] flex items-center justify-center shadow-md shadow-[#14B8A6]/20">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#14B8A6] to-[#0F766E] flex items-center justify-center shadow-md shadow-[#14B8A6]/20">
                 <CalendarIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold text-[#111827] dark:text-[#F8FAFC]">Nueva Cita</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-[#111827] dark:text-[#F8FAFC]">Nueva Cita Médica</DialogTitle>
                 <p className="text-sm text-[#6B7280] dark:text-[#94A3B8] mt-0.5">
-                  Selecciona paciente, dentista y horario para agendar.
+                  Selecciona el paciente, doctor o personal encargado y horario para agendar.
                 </p>
               </div>
             </div>
           </DialogHeader>
 
-          <form id="new-appointment-form" onSubmit={handleCreate} className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
-            {/* Paciente + dentista */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-sm text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
-                  Paciente <span className="text-[#EF4444]">*</span>
-                </Label>
-                <Select
-                  value={form.patient_id}
-                  onValueChange={(v) => setForm((f) => ({ ...f, patient_id: v }))}
-                >
-                  <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]">
-                    <SelectValue placeholder={patientOpts.length ? "Seleccionar paciente..." : "Sin pacientes"} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]">
-                    {patientOpts.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.first_name} {p.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <form id="new-appointment-form" onSubmit={handleCreate} className="px-7 py-5 space-y-5 max-h-[75vh] overflow-y-auto">
+            {/* Sección Paciente y Profesional */}
+            {!isNewPatient ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Paciente Existente */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-[#14B8A6]" />
+                      Paciente <span className="text-[#EF4444]">*</span>
+                    </Label>
+                    <div className="flex items-center gap-1 bg-[#F1F5F9] dark:bg-[#1E293B] p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setIsNewPatient(false)}
+                        className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-white dark:bg-[#0F172A] text-[#0F766E] dark:text-[#2DD4BF] shadow-sm transition-all cursor-pointer"
+                      >
+                        Existente
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsNewPatient(true)}
+                        className="text-xs px-2.5 py-1 rounded-lg font-medium flex items-center gap-1 text-[#64748B] dark:text-gray-400 hover:text-[#14B8A6] dark:hover:text-[#2DD4BF] transition-all cursor-pointer"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        + Nuevo Paciente
+                      </button>
+                    </div>
+                  </div>
+                  <Select
+                    value={form.patient_id}
+                    onValueChange={(v) => setForm((f) => ({ ...f, patient_id: v }))}
+                  >
+                    <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]">
+                      <SelectValue placeholder={patientOpts.length ? "Seleccionar paciente..." : "Sin pacientes registrados"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC] max-h-56">
+                      {patientOpts.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.first_name} {p.last_name} {p.national_id ? `· CI: ${p.national_id}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Doctor o Personal */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200 flex items-center gap-1.5 h-6">
+                    <Stethoscope className="w-4 h-4 text-[#14B8A6]" />
+                    Doctor / Personal Encargado <span className="text-[#EF4444]">*</span>
+                  </Label>
+                  <Select
+                    value={form.dentist_id}
+                    onValueChange={(v) => setForm((f) => ({ ...f, dentist_id: v }))}
+                  >
+                    <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]">
+                      <SelectValue placeholder={dentistOpts.length ? "Seleccionar doctor o personal..." : "Sin personal disponible"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC] max-h-56">
+                      {dentistOpts.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.role_label ? `${d.role_label}: ${d.name}` : (d.name.startsWith("Dr") ? d.name : `Dr(a). ${d.name}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
-                  <Stethoscope className="w-3.5 h-3.5" />
-                  Dentista <span className="text-[#EF4444]">*</span>
-                </Label>
-                <Select
-                  value={form.dentist_id}
-                  onValueChange={(v) => setForm((f) => ({ ...f, dentist_id: v }))}
-                >
-                  <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]">
-                    <SelectValue placeholder={dentistOpts.length ? "Seleccionar dentista..." : "Sin dentistas"} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]">
-                    {dentistOpts.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        Dr. {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            ) : (
+              <div className="space-y-4">
+                {/* Nuevo Paciente Registro Rápido */}
+                <div className="bg-[#F0FDFA] dark:bg-teal-950/25 border border-[#99F6E4] dark:border-teal-800/50 rounded-2xl p-4 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-[#0F766E] dark:text-teal-300">
+                      <Sparkles className="w-4 h-4 text-[#14B8A6]" />
+                      <span>Registro Rápido de Paciente (Se guardará automáticamente con la cita)</span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white/80 dark:bg-[#0F172A] p-1 rounded-xl border border-[#99F6E4] dark:border-teal-800/40">
+                      <button
+                        type="button"
+                        onClick={() => setIsNewPatient(false)}
+                        className="text-xs px-2.5 py-1 rounded-lg font-medium text-[#64748B] dark:text-gray-400 hover:text-[#111827] dark:hover:text-white transition-all cursor-pointer"
+                      >
+                        Existente
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsNewPatient(true)}
+                        className="text-xs px-2.5 py-1 rounded-lg font-semibold bg-[#14B8A6] text-white shadow-xs transition-all cursor-pointer flex items-center gap-1"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        + Nuevo
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#374151] dark:text-gray-200">
+                        Nombre Completo <span className="text-[#EF4444]">*</span>
+                      </Label>
+                      <Input
+                        placeholder="Ej. Juan Pérez Ramos"
+                        value={newPatientName}
+                        onChange={(e) => setNewPatientName(e.target.value)}
+                        className="rounded-xl h-11 bg-white dark:bg-[#111827] border-[#99F6E4] dark:border-teal-800/60 text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6]"
+                        required={isNewPatient}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#374151] dark:text-gray-200">
+                        Carnet / C.I. (Opcional)
+                      </Label>
+                      <Input
+                        placeholder="Ej. 6543210 LP"
+                        value={newPatientNationalId}
+                        onChange={(e) => setNewPatientNationalId(e.target.value)}
+                        className="rounded-xl h-11 bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-[#374151] dark:text-gray-200">
+                        Teléfono / Celular (Opcional)
+                      </Label>
+                      <Input
+                        placeholder="Ej. 70012345"
+                        value={newPatientPhone}
+                        onChange={(e) => setNewPatientPhone(e.target.value)}
+                        className="rounded-xl h-11 bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Doctor o Personal debajo del paciente nuevo */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
+                    <Stethoscope className="w-4 h-4 text-[#14B8A6]" />
+                    Doctor / Personal Encargado <span className="text-[#EF4444]">*</span>
+                  </Label>
+                  <Select
+                    value={form.dentist_id}
+                    onValueChange={(v) => setForm((f) => ({ ...f, dentist_id: v }))}
+                  >
+                    <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]">
+                      <SelectValue placeholder={dentistOpts.length ? "Seleccionar doctor o personal..." : "Sin personal disponible"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC] max-h-56">
+                      {dentistOpts.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.role_label ? `${d.role_label}: ${d.name}` : (d.name.startsWith("Dr") ? d.name : `Dr(a). ${d.name}`)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            )}
 
             <Separator className="dark:bg-[#1E293B]" />
 
             {/* Fecha + hora + duración */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               <div className="space-y-1.5">
-                <Label className="text-sm text-[#374151] dark:text-gray-200">Fecha</Label>
+                <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200">Fecha de la Cita</Label>
                 <Input
                   type="date"
                   value={form.date}
@@ -669,7 +835,7 @@ export default function Appointments({ appointments: initialAppointments, patien
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm text-[#374151] dark:text-gray-200">Hora inicio</Label>
+                <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200">Hora de Inicio</Label>
                 <Input
                   type="time"
                   value={form.start_time}
@@ -678,7 +844,7 @@ export default function Appointments({ appointments: initialAppointments, patien
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm text-[#374151] dark:text-gray-200">Duración</Label>
+                <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200">Duración Estimada</Label>
                 <Select
                   value={String(form.duration_minutes)}
                   onValueChange={(v) => setForm((f) => ({ ...f, duration_minutes: Number(v) }))}
@@ -699,62 +865,66 @@ export default function Appointments({ appointments: initialAppointments, patien
 
             <Separator className="dark:bg-[#1E293B]" />
 
-            {/* Tratamiento + motivo */}
-            <div className="space-y-1.5">
-              <Label className="text-sm text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5" /> Tratamiento principal
-              </Label>
-              <Select
-                value={form.treatment_id}
-                onValueChange={(v) => {
-                  const t = treatmentOpts.find((x) => x.id === v);
-                  setForm((f) => ({
-                    ...f,
-                    treatment_id: v,
-                    duration_minutes: t?.duration_minutes ?? f.duration_minutes,
-                  }));
-                }}
-              >
-                <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]">
-                  <SelectValue placeholder={treatmentOpts.length ? "Sin tratamiento específico" : "Sin tratamientos"} />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]">
-                  {treatmentOpts.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name} — {t.duration_minutes} min
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-[#9CA3AF]">
-                Al elegir un tratamiento, la duración se ajusta automáticamente.
-              </p>
-            </div>
+            {/* Tratamiento, Motivo y Notas en 2 columnas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200 flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-[#14B8A6]" /> Tratamiento o Servicio Principal
+                  </Label>
+                  <Select
+                    value={form.treatment_id}
+                    onValueChange={(v) => {
+                      const t = treatmentOpts.find((x) => x.id === v);
+                      setForm((f) => ({
+                        ...f,
+                        treatment_id: v,
+                        duration_minutes: t?.duration_minutes ?? f.duration_minutes,
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]">
+                      <SelectValue placeholder={treatmentOpts.length ? "Sin tratamiento específico" : "Sin tratamientos registrados"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-[#111827] border-[#D1D5DB] dark:border-[#1E293B] text-[#111827] dark:text-[#F8FAFC]">
+                      {treatmentOpts.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} — {t.duration_minutes} min
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-[#9CA3AF]">
+                    Al elegir un servicio, la duración se ajusta automáticamente.
+                  </p>
+                </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-sm text-[#374151] dark:text-gray-200">Motivo de la consulta</Label>
-              <Input
-                placeholder="Ej. Revisión general, dolor en muela..."
-                className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]"
-                value={form.reason}
-                onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
-              />
-            </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200">Motivo de la Consulta</Label>
+                  <Input
+                    placeholder="Ej. Chequeo general, evaluación, dolor agudo..."
+                    className="rounded-xl h-11 border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]"
+                    value={form.reason}
+                    onChange={(e) => setForm((f) => ({ ...f, reason: e.target.value }))}
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-sm text-[#374151] dark:text-gray-200">Notas internas</Label>
-              <Textarea
-                rows={3}
-                placeholder="Información adicional para el equipo..."
-                className="rounded-xl resize-none border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]"
-                value={form.notes}
-                onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              />
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-[#374151] dark:text-gray-200">Notas Internas</Label>
+                <Textarea
+                  rows={4}
+                  placeholder="Observaciones o notas adicionales para el equipo médico..."
+                  className="rounded-xl resize-none h-[118px] border-[#D1D5DB] dark:border-[#1E293B] bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6]"
+                  value={form.notes}
+                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                />
+              </div>
             </div>
           </form>
 
           {saveError && (
-            <div className="px-6 pb-2">
+            <div className="px-7 pb-2">
               <p className="text-sm text-[#EF4444] bg-[#FEF2F2] dark:bg-red-950/40 border border-[#FECACA] dark:border-red-900/40 rounded-xl px-4 py-2.5 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {saveError}
@@ -762,7 +932,7 @@ export default function Appointments({ appointments: initialAppointments, patien
             </div>
           )}
 
-          <DialogFooter className="px-6 py-4 border-t border-[#F3F4F6] dark:border-[#1E293B] bg-[#F8FAFC] dark:bg-[#111827]">
+          <DialogFooter className="px-7 py-4 border-t border-[#F3F4F6] dark:border-[#1E293B] bg-[#F8FAFC] dark:bg-[#111827]">
             <div className="flex items-center justify-between w-full">
               <p className="text-xs text-[#9CA3AF]">
                 Campos con <span className="text-[#EF4444]">*</span> son obligatorios
@@ -780,7 +950,7 @@ export default function Appointments({ appointments: initialAppointments, patien
                   type="submit"
                   form="new-appointment-form"
                   disabled={saving}
-                  className="bg-[#14B8A6] hover:bg-[#0F766E] text-white rounded-xl px-6 shadow-md shadow-[#14B8A6]/20 cursor-pointer transition-colors duration-200"
+                  className="bg-[#14B8A6] hover:bg-[#0F766E] text-white rounded-xl px-6 shadow-md shadow-[#14B8A6]/20 cursor-pointer transition-colors duration-200 font-medium"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle className="w-4 h-4 mr-2" />}
                   {saving ? "Guardando..." : "Agendar Cita"}
@@ -870,7 +1040,7 @@ function AppointmentCard({ appointment, isUpdating, onStatusChange, onDelete }: 
               {appointment.patient?.first_name} {appointment.patient?.last_name}
             </p>
             <p className="text-sm text-[#6B7280] dark:text-[#94A3B8] truncate">
-              Dr. {appointment.dentist?.first_name} {appointment.dentist?.last_name}
+              {appointment.dentist?.first_name ? `Dr(a). ${appointment.dentist.first_name} ${appointment.dentist.last_name}` : "Personal encargado"}
               {appointment.notes ? ` · ${appointment.notes}` : ""}
             </p>
           </div>

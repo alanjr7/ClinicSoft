@@ -127,6 +127,11 @@ Route::middleware(['auth', 'checkTenant'])->group(function () {
     Route::post('/public-view/appearance',               [\App\Http\Controllers\Erp\PublicViewController::class, 'updateAppearance'])->name('public-view.appearance');
     Route::post('/public-view/booking-hours',            [\App\Http\Controllers\Erp\PublicViewController::class, 'updateBookingHours'])->name('public-view.booking-hours');
 
+    // Chat Guía / Tutoriales
+    Route::get('/chat-guide', function () {
+        return inertia('ChatGuide');
+    })->name('chat-guide');
+
     // ── PDF Downloads ─────────────────────────────────────────────────────
     Route::get('/invoices/{id}/pdf',              [PdfController::class, 'invoicePdf'])->name('invoices.pdf');
     Route::get('/budgets/{id}/pdf',               [PdfController::class, 'budgetPdf'])->name('budgets.pdf');

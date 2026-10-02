@@ -238,7 +238,7 @@
     <tr>
       <td class="clinic-col">
         <div class="clinic-title">{{ $tenant->name }}</div>
-        <div class="clinic-subtitle">Historial Clínico Odontológico</div>
+        <div class="clinic-subtitle">Historial Clínico Médico</div>
         <div class="clinic-meta">
           @if($tenant->address){{ $tenant->address }}@endif
           @if($tenant->city), {{ $tenant->city }}@endif

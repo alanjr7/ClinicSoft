@@ -319,7 +319,7 @@
         <tr>
             <td class="header-left">
                 <div class="clinic-name">{{ $tenant->name }}</div>
-                <div class="clinic-subtitle">Servicios Odontológicos Especializados</div>
+                <div class="clinic-subtitle">Servicios Médicos Especializados</div>
             </td>
             <td class="header-right">
                 <div class="document-type">Presupuesto</div>
@@ -422,7 +422,7 @@
                             @if($item->treatment)
                                 {{ $item->treatment->name }}
                             @else
-                                {{ $item->description ?: 'Tratamiento Dental' }}
+                                {{ $item->description ?: 'Tratamiento / Procedimiento' }}
                             @endif
                         </span>
                     </td>
@@ -503,8 +503,14 @@
             <td class="signature">
                 <div style="height: 32px;"></div>
                 <div class="signature-line"></div>
-                <div class="signature-name">Responsable Odontológico</div>
-                <div class="signature-description">Firma y sello profesional</div>
+                <div class="signature-name">
+                    @if($budget->createdBy && $budget->createdBy->first_name)
+                        Dr(a). {{ $budget->createdBy->first_name }} {{ $budget->createdBy->last_name }}
+                    @else
+                        Dr. Responsable
+                    @endif
+                </div>
+                <div class="signature-description">Dr. Responsable / Firma y sello</div>
             </td>
         </tr>
     </table>

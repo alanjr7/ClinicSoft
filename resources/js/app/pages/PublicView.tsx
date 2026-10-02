@@ -370,7 +370,7 @@ export default function PublicView({ tenant, appointments = [], treatments: init
                                     <TableRow className="border-b border-gray-100 dark:border-[#1E293B] hover:bg-transparent">
                                         <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Fecha Cita</TableHead>
                                         <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Paciente</TableHead>
-                                        <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Tratamiento(s)</TableHead>
+                                        <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Servicio / Consulta</TableHead>
                                         <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Monto Esperado</TableHead>
                                         <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Estado Pago</TableHead>
                                         <TableHead className="text-right text-[#111827] dark:text-[#F8FAFC] font-semibold">Acciones</TableHead>
@@ -419,24 +419,24 @@ export default function PublicView({ tenant, appointments = [], treatments: init
                         </div>
                     </TabsContent>
 
-                    {/* PRECIOS Y TRATAMIENTOS */}
+                    {/* PRECIOS Y SERVICIOS */}
                     <TabsContent value="precios">
                         <div className="bg-white dark:bg-[#0F172A] rounded-2xl shadow-sm border border-gray-100 dark:border-[#1E293B] overflow-hidden">
                             <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 dark:border-[#1E293B] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <div>
                                     <h2 className="text-lg font-semibold text-gray-900 dark:text-[#F8FAFC]">Control Rápido de Precios</h2>
-                                    <p className="text-sm text-gray-500 dark:text-[#94A3B8]">Activa o desactiva los tratamientos que se muestran en el portal público y ajusta su precio base.</p>
+                                    <p className="text-sm text-gray-500 dark:text-[#94A3B8]">Activa o desactiva los servicios y consultas que se muestran en el portal público y ajusta su precio base.</p>
                                 </div>
                                 <Button onClick={() => setNewTreatmentModalOpen(true)} className="bg-teal-600 hover:bg-teal-700 text-white flex items-center gap-2 cursor-pointer shadow-md shadow-teal-600/20">
                                     <Plus className="w-4 h-4" />
-                                    Nuevo
+                                    Nuevo Servicio
                                 </Button>
                             </div>
                             <Table>
                                 <TableHeader>
                                     <TableRow className="border-b border-gray-100 dark:border-[#1E293B] hover:bg-transparent">
                                         <TableHead className="w-16 text-[#111827] dark:text-[#F8FAFC] font-semibold">Foto</TableHead>
-                                        <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Tratamiento</TableHead>
+                                        <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Servicio / Especialidad</TableHead>
                                         <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Precio Público</TableHead>
                                         <TableHead className="text-[#111827] dark:text-[#F8FAFC] font-semibold">Duración (min)</TableHead>
                                         <TableHead className="text-center text-[#111827] dark:text-[#F8FAFC] font-semibold">Visible</TableHead>
@@ -904,19 +904,19 @@ export default function PublicView({ tenant, appointments = [], treatments: init
                 </DialogContent>
             </Dialog>
 
-            {/* Modal para Nuevo Tratamiento */}
+            {/* Modal para Nuevo Servicio / Especialidad */}
             <Dialog open={newTreatmentModalOpen} onOpenChange={setNewTreatmentModalOpen}>
                 <DialogContent className="sm:max-w-md rounded-2xl bg-white dark:bg-[#0F172A] text-[#111827] dark:text-[#F8FAFC] border dark:border-[#1E293B]">
                     <DialogHeader>
-                        <DialogTitle className="text-[#111827] dark:text-[#F8FAFC]">Nuevo Tratamiento Público</DialogTitle>
+                        <DialogTitle className="text-[#111827] dark:text-[#F8FAFC]">Nuevo Servicio Público</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nombre del Tratamiento</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nombre del Servicio o Consulta</label>
                             <Input 
                                 value={newTreatmentName} 
                                 onChange={(e) => setNewTreatmentName(e.target.value)} 
-                                placeholder="Ej. Limpieza Dental" 
+                                placeholder="Ej. Consulta Médica General, Pediatría..." 
                                 className="bg-white dark:bg-[#111827] text-[#111827] dark:text-[#F8FAFC] border-gray-200 dark:border-[#1E293B]"
                             />
                         </div>
@@ -948,12 +948,12 @@ export default function PublicView({ tenant, appointments = [], treatments: init
                                 onChange={(e) => setNewTreatmentActive(e.target.checked)}
                                 className="rounded text-teal-600 focus:ring-teal-500"
                             />
-                            <label htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-200">Visible en la vista pública</label>
+                            <label htmlFor="is_active" className="text-sm text-gray-700 dark:text-gray-200">Visible en el portal público</label>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setNewTreatmentModalOpen(false)} className="border-gray-200 dark:border-[#1E293B] text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1E293B]">Cancelar</Button>
-                        <Button className="bg-teal-600 text-white hover:bg-teal-700 shadow-md shadow-teal-600/20 cursor-pointer" onClick={handleCreateTreatment}>Guardar Tratamiento</Button>
+                        <Button className="bg-teal-600 text-white hover:bg-teal-700 shadow-md shadow-teal-600/20 cursor-pointer" onClick={handleCreateTreatment}>Guardar Servicio</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -76,6 +76,7 @@ class PdfController extends Controller
             $query = Budget::where('id', $id)->with([
                 'patient',
                 'items.treatment',
+                'createdBy',
             ]);
 
             if ($tenantId) {

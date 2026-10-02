@@ -377,7 +377,7 @@
       <tr>
         <td>
           <strong>
-            {{ $payment->notes ?: 'Pago por servicios odontológicos' }}
+            {{ $payment->notes ?: 'Pago por servicios médicos y de salud' }}
           </strong>
         </td>
         <td style="text-align: center;">1</td>

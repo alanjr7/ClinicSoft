@@ -32,19 +32,19 @@ async function cargarDatos() {
         $('tiposContainer').innerHTML = `
             <div class="empty-state">
                 <i class="fa-solid fa-circle-exclamation"></i>
-                <p>No se pudieron cargar los tratamientos. Por favor recargue la página.</p>
+                <p>No se pudieron cargar los servicios médicos. Por favor recargue la página.</p>
             </div>`;
     }
 }
 
-/* ========== PASO 1: TRATAMIENTOS ========== */
+/* ========== PASO 1: SERVICIOS Y ESPECIALIDADES ========== */
 function renderTratamientos() {
     const cont = $('tiposContainer');
     if (!tratamientos.length) {
         cont.innerHTML = `
             <div class="empty-state">
                 <i class="fa-regular fa-face-meh"></i>
-                <p>No hay tratamientos disponibles por el momento.</p>
+                <p>No hay servicios médicos o consultas disponibles por el momento.</p>
             </div>`;
         return;
     }
@@ -52,8 +52,8 @@ function renderTratamientos() {
     cont.innerHTML = tratamientos.map(t => {
         const isSelected = tratamientoSel?.id === t.id;
         const imgHtml = t.image_path
-            ? `<img src="/storage/${t.image_path}" alt="${esc(t.name)}" class="tipo-img" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'tipo-img-placeholder\\'><i class=\\'fa-solid fa-tooth\\'></i></div>'">`
-            : `<div class="tipo-img-placeholder"><i class="fa-solid fa-tooth"></i></div>`;
+            ? `<img src="/storage/${t.image_path}" alt="${esc(t.name)}" class="tipo-img" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'tipo-img-placeholder\\'><i class=\\'fa-solid fa-stethoscope\\'></i></div>'">`
+            : `<div class="tipo-img-placeholder"><i class="fa-solid fa-stethoscope"></i></div>`;
         return `
         <button type="button" class="tipo${isSelected ? ' sel' : ''}" onclick="selTratamiento('${t.id}')" id="tipo-${t.id}">
             ${imgHtml}
@@ -410,7 +410,7 @@ function mostrarExito() {
             <h2>¡Reserva Confirmada!</h2>
             <p>Hemos recibido su solicitud de cita correctamente.</p>
             <div class="success-details">
-                <div class="sd-row"><i class="fa-solid fa-tooth"></i> <span>${esc(tratamientoSel.name)}</span></div>
+                <div class="sd-row"><i class="fa-solid fa-stethoscope"></i> <span>${esc(tratamientoSel.name)}</span></div>
                 <div class="sd-row"><i class="fa-regular fa-calendar"></i> <span>${new Date(fechaSel + 'T00:00:00').toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long' })} a las ${horaSel}</span></div>
             </div>
             <p class="success-sub">Pronto recibirá confirmación. Si tiene alguna consulta, contáctenos por WhatsApp.</p>

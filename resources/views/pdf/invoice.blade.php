@@ -326,7 +326,7 @@
   {{-- ── 1. BANNER SUPERIOR ── --}}
   <div class="top-banner">
     <div class="top-banner-title">{{ $tenant->name }}</div>
-    <div class="top-banner-sub">Factura de Servicios Odontológicos</div>
+    <div class="top-banner-sub">Factura de Servicios Médicos y Salud</div>
   </div>
 
   {{-- ── 2. TÍTULO Y FOLIO ── --}}

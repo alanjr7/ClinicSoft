@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reserva de Cita — {{ $tenant->name }}</title>
-  <meta name="description" content="Reserve su cita dental en línea en {{ $tenant->name }}. Proceso rápido, seguro y sin complicaciones.">
+  <meta name="description" content="Reserve su cita médica o de especialidad en línea en {{ $tenant->name }}. Proceso rápido, seguro y sin complicaciones.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
   @if($tenant->logo_url)
     <link rel="icon" type="image/png" href="{{ asset('storage/' . $tenant->logo_url) }}">
   @else
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩺</text></svg>">
   @endif
   <link rel="manifest" href="/manifest-book.json">
   <meta name="theme-color" content="#14B8A6">
@@ -83,12 +83,12 @@
           @if($tenant->logo_url)
             <img src="{{ asset('storage/' . $tenant->logo_url) }}" alt="{{ $tenant->name }}">
           @else
-            <i class="fa-solid fa-tooth" style="font-size:22px;color:{{ $tenant->header_text_color ?? '#ffffff' }};"></i>
+            <i class="fa-solid fa-house-medical" style="font-size:22px;color:{{ $tenant->header_text_color ?? '#ffffff' }};"></i>
           @endif
         </div>
         <div>
           {{ $tenant->name }}
-          <span class="brand-sub" style="color: {{ $tenant->header_text_color ?? '#ffffff' }}; opacity: 0.9;">Sistema de Reserva de Citas</span>
+          <span class="brand-sub" style="color: {{ $tenant->header_text_color ?? '#ffffff' }}; opacity: 0.9;">Sistema de Reserva de Citas Médicas</span>
         </div>
       </div>
     </div>
@@ -101,7 +101,7 @@
           <div class="wiz-stepper" id="wizStepper">
             <div class="wiz-si">
               <div class="wiz-snum active" id="wsn1">1</div>
-              <div class="wiz-slbl active" id="wsl1">Tratamiento</div>
+              <div class="wiz-slbl active" id="wsl1">Servicio / Consulta</div>
             </div>
             <div class="wiz-sline" id="wline1"></div>
             <div class="wiz-si">
@@ -119,19 +119,19 @@
           <div class="wiz-card">
             <div class="wiz-track" id="wizTrack">
 
-              <!-- ===== PASO 1: TRATAMIENTO ===== -->
+              <!-- ===== PASO 1: SERVICIO / ESPECIALIDAD ===== -->
               <div class="wstep active" id="wStep1">
                 <div class="wiz-step-head">
-                  <div class="wiz-step-icon teal"><i class="fa-solid fa-tooth"></i></div>
+                  <div class="wiz-step-icon teal"><i class="fa-solid fa-stethoscope"></i></div>
                   <div class="wiz-step-head-txt">
-                    <h2>Seleccione un Tratamiento</h2>
-                    <p>Elija el servicio dental que necesita</p>
+                    <h2>Seleccione un Servicio o Especialidad</h2>
+                    <p>Elija la consulta médica o procedimiento que necesita</p>
                   </div>
                 </div>
                 <div class="tipos" id="tiposContainer">
                   <div class="empty-state" style="grid-column:1/-1">
                     <i class="fa-solid fa-spinner fa-spin" style="font-size:32px;color:var(--teal);"></i>
-                    <p>Cargando tratamientos disponibles...</p>
+                    <p>Cargando servicios médicos disponibles...</p>
                   </div>
                 </div>
                 <div id="wizErr1" class="wiz-err hidden">

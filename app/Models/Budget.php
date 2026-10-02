@@ -38,6 +38,11 @@ class Budget extends Model
         return $this->belongsTo(Patient::class);
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function items()
     {
         return $this->hasMany(BudgetItem::class);
