@@ -1,7 +1,9 @@
+import './lib/translateFix';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from './context/ThemeContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles/index.css';
 
 createInertiaApp({
@@ -13,12 +15,15 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         createRoot(el).render(
-            <ThemeProvider>
-                <App {...props} />
-            </ThemeProvider>
+            <ErrorBoundary>
+                <ThemeProvider>
+                    <App {...props} />
+                </ThemeProvider>
+            </ErrorBoundary>
         );
     },
     progress: {
         color: '#14B8A6',
     },
 });
+
