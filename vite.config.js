@@ -41,6 +41,11 @@ export default defineConfig({
             '@': path.resolve(__dirname, './resources/js'),
         },
     },
+    build: {
+        rollupOptions: {
+            input: path.resolve(__dirname, 'resources/js/app.tsx'),
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
