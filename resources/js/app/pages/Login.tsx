@@ -154,7 +154,7 @@ export default function Login() {
               </Button>
             </form>
 
-            {/* Separador */}
+            {/* Modo Prueba / Demo comentado temporalmente
             <div className="relative my-5 text-center">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200 dark:border-gray-800" />
@@ -166,7 +166,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Botón Modo Demo (Gris con Letras Gruesas) */}
             <button
               type="button"
               onClick={() => setShowDemoModal(true)}
@@ -174,6 +173,7 @@ export default function Login() {
             >
               Modo Demo
             </button>
+            */}
           </div>
 
           <p className="text-center text-xs text-[#9CA3AF] mt-8">
@@ -202,8 +202,8 @@ export default function Login() {
       </div>
 
       {/* ────────────────────────────────────────────────────────────────────────── */}
-      {/* MODAL: ACCESO A MODO PRUEBA / DEMO INTERACTIVA                             */}
-      {/* ────────────────────────────────────────────────────────────────────────── */}
+      {/* MODAL: ACCESO A MODO PRUEBA / DEMO INTERACTIVA (Comentado temporalmente) */}
+      {/*
       <Dialog open={showDemoModal} onOpenChange={setShowDemoModal}>
         <DialogContent className="max-w-md rounded-3xl bg-white text-[#111827] border border-gray-100 shadow-2xl p-6 sm:p-7">
           <DialogHeader className="text-left space-y-2">
@@ -226,7 +226,6 @@ export default function Login() {
               </div>
             )}
 
-            {/* Nombre Completo */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-[#374151]">
                 Nombre Completo <span className="text-red-500">*</span>
@@ -243,7 +242,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Número de WhatsApp */}
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-[#374151]">
                 Número de WhatsApp <span className="text-red-500">*</span>
@@ -264,7 +262,6 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Nombre de la Empresa / Clínica (Opcional) */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold text-[#374151]">
@@ -283,7 +280,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Features check list */}
             <div className="bg-gray-50 rounded-2xl p-3.5 space-y-2 border border-gray-100">
               <div className="flex items-center gap-2 text-xs text-gray-600">
                 <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0" />
@@ -323,6 +319,7 @@ export default function Login() {
           </form>
         </DialogContent>
       </Dialog>
+      */}
     </div>
   );
 }

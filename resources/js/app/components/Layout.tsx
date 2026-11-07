@@ -200,7 +200,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                 )}
 
-                {/* Demo Mode Top Ribbon Banner */}
+                {/* Demo Mode Top Ribbon Banner (Comentado temporalmente) */}
+                {/*
                 {isDemoMode && (
                     <div className="bg-gradient-to-r from-sky-700 via-sky-700 to-sky-800 text-white px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-2 shadow-md z-30 shrink-0">
                         <div className="flex items-center gap-2">
@@ -229,6 +230,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         </div>
                     </div>
                 )}
+                */}
 
                 {/* Mobile Header */}
                 <div className="lg:hidden flex items-center justify-between p-4 bg-white dark:bg-[#0F172A] border-b border-[#F3F4F6] dark:border-[#1E293B] shrink-0">

@@ -14,6 +14,7 @@ class Patient extends Model
 
     protected $fillable = [
         'tenant_id',
+        'user_id',
         'first_name',
         'last_name',
         'national_id',
@@ -35,6 +36,16 @@ class Patient extends Model
         'date_of_birth' => 'date:Y-m-d',
         'is_active' => 'boolean',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function portalPreferences()
+    {
+        return $this->hasOne(PatientPortalPreference::class);
+    }
 
     public function tenant()
     {

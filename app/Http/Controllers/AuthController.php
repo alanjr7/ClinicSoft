@@ -21,6 +21,9 @@ class AuthController extends Controller
             if ($user->global_role === 'area') {
                 return redirect()->route('area.dashboard');
             }
+            if ($user->isPatient()) {
+                return redirect()->route('portal.history');
+            }
             return redirect()->route('dashboard');
         }
 
@@ -50,10 +53,12 @@ class AuthController extends Controller
         $user->last_login_at = now();
         $user->save();
 
+        $isPatient = $user->isPatient();
+
         $redirectTo = match ($user->global_role) {
             'superadmin' => route('superadmin.dashboard'),
             'area'       => route('area.dashboard'),
-            default      => route('dashboard'),
+            default      => $isPatient ? route('portal.history') : route('dashboard'),
         };
 
         return Inertia::location($redirectTo);

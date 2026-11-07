@@ -45,6 +45,7 @@ Route::middleware(['auth', 'checkTenant'])->group(function () {
     Route::post('/patients',          [PatientController::class, 'store'])->name('patients.store');
     Route::put('/patients/{id}',      [PatientController::class, 'update'])->name('patients.update');
     Route::delete('/patients/{id}',   [PatientController::class, 'destroy'])->name('patients.destroy');
+    Route::post('/patients/{id}/access', [PatientController::class, 'createAccess'])->name('patients.access');
 
     // Patient Files & Folders
     Route::post('/patients/{patient}/folders',                             [PatientFileController::class, 'storeFolder'])->name('patients.folders.store');
@@ -188,6 +189,17 @@ Route::prefix('area')->name('area.')->middleware(['auth', 'area'])->group(functi
     Route::get('/clinics',                            [\App\Http\Controllers\Area\AreaClinicController::class, 'index'])->name('clinics.index');
     Route::post('/clinics/{tenantId}/impersonate',    [\App\Http\Controllers\Area\AreaClinicController::class, 'impersonate'])->name('clinics.impersonate');
     Route::post('/exit-impersonation',                [\App\Http\Controllers\Area\AreaClinicController::class, 'exitImpersonation'])->name('exit-impersonation');
+});
+
+// --- Patient Portal (Portal del Paciente) ---
+Route::prefix('portal')->name('portal.')->middleware(['auth', 'patient.portal'])->group(function () {
+    Route::get('/', fn () => redirect()->route('portal.history'));
+    Route::get('/historial',            [\App\Http\Controllers\Portal\PatientPortalController::class, 'history'])->name('history');
+    Route::get('/reservar-cita',        [\App\Http\Controllers\Portal\PatientPortalController::class, 'bookAppointment'])->name('book');
+    Route::post('/reservar-cita',       [\App\Http\Controllers\Portal\PatientPortalController::class, 'storeAppointment'])->name('book.store');
+    Route::post('/citas/{id}/cancelar', [\App\Http\Controllers\Portal\PatientPortalController::class, 'cancelAppointment'])->name('appointment.cancel');
+    Route::get('/configuracion',        [\App\Http\Controllers\Portal\PatientPortalController::class, 'settings'])->name('settings');
+    Route::put('/configuracion',        [\App\Http\Controllers\Portal\PatientPortalController::class, 'updateSettings'])->name('settings.update');
 });
 
 // --- Public Booking ---

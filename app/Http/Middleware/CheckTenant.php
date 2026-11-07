@@ -46,6 +46,10 @@ class CheckTenant
                 ->withErrors(['email' => 'Tu cuenta no está asociada a ninguna clínica activa.']);
         }
 
+        if ($tenantUser->role === 'patient') {
+            return redirect()->route('portal.history');
+        }
+
         // Inject tenant_id into request attributes for controllers
         $request->attributes->add(['tenant_id' => $tenantUser->tenant_id]);
 

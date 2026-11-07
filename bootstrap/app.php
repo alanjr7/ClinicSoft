@@ -18,9 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'superadmin'  => \App\Http\Middleware\SuperAdmin::class,
-            'checkTenant' => \App\Http\Middleware\CheckTenant::class,
-            'area'        => \App\Http\Middleware\AreaMiddleware::class,
+            'superadmin'     => \App\Http\Middleware\SuperAdmin::class,
+            'checkTenant'    => \App\Http\Middleware\CheckTenant::class,
+            'area'           => \App\Http\Middleware\AreaMiddleware::class,
+            'patient.portal' => \App\Http\Middleware\PatientPortalMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

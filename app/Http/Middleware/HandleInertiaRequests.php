@@ -64,6 +64,11 @@ class HandleInertiaRequests extends Middleware
                 }
 
                 $permissions = [];
+                $patientRecord = null;
+                if ($role === 'patient' && $tenantId) {
+                    $patientRecord = \App\Models\Patient::where('tenant_id', $tenantId)->where('user_id', $user->id)->first();
+                }
+
                 if (in_array($role, ['doctor', 'staff', 'asistente']) && $tenantId) {
                     $permissions = $user->modulePermissions()
                         ->where('tenant_id', $tenantId)
@@ -85,6 +90,7 @@ class HandleInertiaRequests extends Middleware
                 'tenant_name' => $tenantName,
                 'area_name'   => $areaName,
                 'role'        => $role,
+                'patient_id'  => $patientRecord?->id,
                 'permissions' => $permissions,
             ];
         }

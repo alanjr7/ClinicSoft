@@ -30,7 +30,7 @@ class PatientController extends Controller
             });
         }
 
-        $patients = $query->latest()->get();
+        $patients = $query->with('user:id,email,is_active')->latest()->get();
 
         return Inertia::render('Patients', [
             'patients' => $patients,
@@ -200,5 +200,56 @@ class PatientController extends Controller
         $patient->save();
 
         return redirect()->route('patients.index')->with('success', 'Paciente eliminado.');
+    }
+
+    public function createAccess(Request $request, $id)
+    {
+        $tenantId = $request->attributes->get('tenant_id');
+
+        $patient = Patient::where('id', $id)->where('tenant_id', $tenantId)->firstOrFail();
+
+        $validated = $request->validate([
+            'email'    => 'required|email|max:255',
+            'password' => 'required|string|min:6|max:100',
+        ]);
+
+        // Find or create User
+        $user = \App\Models\User::where('email', $validated['email'])->first();
+
+        if (! $user) {
+            $user = \App\Models\User::create([
+                'first_name'         => $patient->first_name,
+                'last_name'          => $patient->last_name,
+                'email'              => $validated['email'],
+                'phone'              => $patient->phone,
+                'password'           => \Illuminate\Support\Facades\Hash::make($validated['password']),
+                'encrypted_password' => $validated['password'],
+                'global_role'        => 'regular',
+                'is_active'          => true,
+            ]);
+        } else {
+            $user->password = \Illuminate\Support\Facades\Hash::make($validated['password']);
+            $user->encrypted_password = $validated['password'];
+            $user->is_active = true;
+            $user->save();
+        }
+
+        // Assign to Tenant with 'patient' role
+        \App\Models\TenantUser::updateOrCreate(
+            ['tenant_id' => $tenantId, 'user_id' => $user->id],
+            ['role' => 'patient', 'is_active' => true]
+        );
+
+        // Link to Patient record
+        $patient->user_id = $user->id;
+        if (empty($patient->email) || $patient->email !== $validated['email']) {
+            $patient->email = $validated['email'];
+        }
+        $patient->save();
+
+        // Ensure default preferences
+        \App\Models\PatientPortalPreference::firstOrCreate(['patient_id' => $patient->id]);
+
+        return back()->with('success', "Acceso asignado con éxito para {$patient->first_name} ({$validated['email']}).");
     }
 }

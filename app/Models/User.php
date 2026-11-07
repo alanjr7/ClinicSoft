@@ -93,6 +93,16 @@ class User extends Authenticatable
         return $this->hasOne(Area::class);
     }
 
+    public function patient()
+    {
+        return $this->hasOne(Patient::class, 'user_id');
+    }
+
+    public function isPatient(): bool
+    {
+        return $this->tenantUsers()->where('is_active', true)->where('role', 'patient')->exists();
+    }
+
     public function getNameAttribute(): string
     {
         return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));

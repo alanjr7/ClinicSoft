@@ -17,6 +17,7 @@ import {
   ChevronRight,
   FileText,
   Loader2,
+  Key,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -37,6 +38,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "../components/ui/dialog";
 import {
@@ -66,6 +68,7 @@ interface PatientListItem {
   email: string | null;
   is_active: boolean;
   created_at: string;
+  user?: { id: string; email: string; is_active: boolean } | null;
 }
 
 interface Props {
@@ -109,6 +112,50 @@ export default function Patients({ patients, filters }: Props) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<PatientListItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Modal Crear Acceso (Logging)
+  const [accessPatient, setAccessPatient] = useState<PatientListItem | null>(null);
+  const [accessEmail, setAccessEmail] = useState("");
+  const [accessPassword, setAccessPassword] = useState("");
+  const [savingAccess, setSavingAccess] = useState(false);
+  const [accessError, setAccessError] = useState<string | null>(null);
+
+  function handleOpenAccess(patient: PatientListItem) {
+    setAccessPatient(patient);
+    setAccessEmail(patient.email || "");
+    setAccessPassword("");
+    setAccessError(null);
+  }
+
+  function generateRandomPassword() {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$";
+    let pass = "";
+    for (let i = 0; i < 8; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setAccessPassword(pass);
+  }
+
+  function handleSaveAccess(e: React.FormEvent) {
+    e.preventDefault();
+    if (!accessPatient) return;
+    setSavingAccess(true);
+    setAccessError(null);
+
+    router.post(`/patients/${accessPatient.id}/access`, {
+      email: accessEmail,
+      password: accessPassword,
+    }, {
+      onSuccess: () => {
+        setAccessPatient(null);
+      },
+      onError: (errors) => {
+        const first = Object.values(errors)[0];
+        setAccessError(typeof first === "string" ? first : "Error al guardar acceso para el paciente.");
+      },
+      onFinish: () => setSavingAccess(false),
+    });
+  }
 
   function handleDeletePatient() {
     if (!patientToDelete) return;
@@ -365,6 +412,16 @@ export default function Patients({ patients, filters }: Props) {
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-lg cursor-pointer"
+                        onClick={() => handleOpenAccess(patient)}
+                        title={patient.user ? "Gestionar credenciales de acceso" : "Crear credenciales de acceso para este paciente"}
+                      >
+                        <Key className="w-4 h-4 mr-1.5" />
+                        {patient.user ? "Acceso" : "Crear acceso"}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -1177,6 +1234,86 @@ export default function Patients({ patients, filters }: Props) {
               {deleting ? 'Eliminando...' : 'Sí, eliminar paciente'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Crear Acceso (Logging) dibujado por el usuario */}
+      <Dialog open={Boolean(accessPatient)} onOpenChange={(open) => !open && setAccessPatient(null)}>
+        <DialogContent className="sm:max-w-md bg-white dark:bg-[#0F172A] border border-[#F3F4F6] dark:border-[#1E293B]">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-[#111827] dark:text-white flex items-center gap-2">
+              <Key className="w-5 h-5 text-emerald-500" />
+              {accessPatient?.user ? "Gestionar Acceso del Paciente" : "Crear Acceso al Paciente"}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-gray-500">
+              Asigna o actualiza las credenciales para {accessPatient?.first_name} {accessPatient?.last_name}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveAccess} className="space-y-4 py-2">
+            {accessError && (
+              <div className="p-3 text-xs bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-lg">
+                {accessError}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="access-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Correo electrónico:
+              </Label>
+              <Input
+                id="access-email"
+                type="email"
+                required
+                placeholder="correo@ejemplo.com"
+                value={accessEmail}
+                onChange={(e) => setAccessEmail(e.target.value)}
+                className="h-10 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-xl"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="access-password" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Contraseña:
+                </Label>
+                <button
+                  type="button"
+                  onClick={generateRandomPassword}
+                  className="text-xs text-sky-600 hover:text-sky-700 font-medium cursor-pointer"
+                >
+                  Generar contraseña
+                </button>
+              </div>
+              <Input
+                id="access-password"
+                type="text"
+                required
+                placeholder="Mínimo 6 caracteres"
+                value={accessPassword}
+                onChange={(e) => setAccessPassword(e.target.value)}
+                className="h-10 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-xl font-mono text-sm"
+              />
+            </div>
+
+            <DialogFooter className="pt-4 flex items-center justify-end gap-2 border-t border-gray-100 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAccessPatient(null)}
+                className="rounded-xl border-[#D1D5DB] dark:border-[#1E293B]"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={savingAccess}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-xs"
+              >
+                {savingAccess ? "Guardando..." : "Guardar Acceso"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
