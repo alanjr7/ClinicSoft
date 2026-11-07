@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Models\User;
+use App\Services\AuditLogger;
 
 class AuthController extends Controller
 {
@@ -37,21 +40,116 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $normalizedEmail = Str::lower(trim($credentials['email']));
+        $throttleKey = Str::transliterate($normalizedEmail . '|' . $request->ip());
+        $lockoutKey  = 'login_lockout:' . $throttleKey;
+        $attemptsKey = 'login_attempts:' . $throttleKey;
 
+        // 1. Verificamos si el usuario/IP se encuentra en el período de bloqueo de 20 segundos
+        if (RateLimiter::tooManyAttempts($lockoutKey, 1)) {
+            $seconds = max(1, RateLimiter::availableIn($lockoutKey));
+
+            return back()->withErrors([
+                'email' => "Acceso bloqueado por seguridad. Has superado los 5 intentos permitidos. Intenta nuevamente en {$seconds} segundos.",
+            ])->with('lockout_seconds', $seconds);
+        }
+
+        $user = User::where('email', $normalizedEmail)->first();
+
+        // 2. Si el usuario no existe o la contraseña no coincide
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
-            return back()->withErrors(['email' => 'Correo o contraseña incorrectos']);
+            // Acumulamos el intento fallido (con ventana de 15 minutos para que no expire entre tipeos normales)
+            RateLimiter::hit($attemptsKey, 900);
+            $totalAttempts = RateLimiter::attempts($attemptsKey);
+
+            $tenantId = $user?->tenantUsers()->where('is_active', true)->value('tenant_id');
+
+            // Si alcanzó o superó los 5 intentos fallidos: ACTIVAR BLOQUEO DE 20 SEGUNDOS
+            if ($totalAttempts >= 5) {
+                // Activamos el bloqueo por exactamente 20 segundos
+                RateLimiter::hit($lockoutKey, 20);
+                // Limpiamos los intentos acumulados para que al pasar los 20 segundos comience desde cero
+                RateLimiter::clear($attemptsKey);
+
+                $seconds = max(1, RateLimiter::availableIn($lockoutKey));
+
+                AuditLogger::log(
+                    action: 'login_blocked',
+                    module: 'auth',
+                    description: "Bloqueo por seguridad: 5 intentos fallidos superados desde IP {$request->ip()}.",
+                    tenantId: $tenantId,
+                    user: $user,
+                    details: [
+                        'email' => $normalizedEmail,
+                        'ip' => $request->ip(),
+                        'lockout_seconds' => $seconds,
+                    ]
+                );
+
+                return back()->withErrors([
+                    'email' => "Has fallado 5 intentos de inicio de sesión. Tu acceso ha sido bloqueado por {$seconds} segundos.",
+                ])->with('lockout_seconds', $seconds);
+            }
+
+            // Aún le quedan intentos antes de los 5
+            $retriesLeft = 5 - $totalAttempts;
+            $attemptsText = $retriesLeft === 1 ? 'te queda 1 intento restante' : "te quedan {$retriesLeft} intentos restantes";
+
+            AuditLogger::log(
+                action: 'login_failed',
+                module: 'auth',
+                description: "Intento fallido de inicio de sesión con contraseña incorrecta. Intentos restantes: {$retriesLeft}.",
+                tenantId: $tenantId,
+                user: $user,
+                details: [
+                    'email' => $normalizedEmail,
+                    'ip' => $request->ip(),
+                    'attempts_left' => $retriesLeft,
+                ]
+            );
+
+            return back()->withErrors([
+                'email' => "Correo o contraseña incorrectos ({$attemptsText}).",
+            ]);
         }
 
         if (! $user->is_active) {
+            $tenantId = $user->tenantUsers()->where('is_active', true)->value('tenant_id');
+            AuditLogger::log(
+                action: 'login_failed',
+                module: 'auth',
+                description: "Intento de inicio de sesión de usuario inactivo: {$normalizedEmail}",
+                tenantId: $tenantId,
+                user: $user
+            );
             return back()->withErrors(['email' => 'Usuario inactivo. Contacta al administrador.']);
         }
+
+        // 3. Inicio exitoso: limpiamos tanto los intentos como cualquier bloqueo
+        RateLimiter::clear($attemptsKey);
+        RateLimiter::clear($lockoutKey);
 
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
         $user->last_login_at = now();
         $user->save();
+
+        $tenantUser = $user->tenantUsers()->where('is_active', true)->first();
+        $tenantId = $tenantUser?->tenant_id;
+
+        // Registro de inicio de sesión en la bitácora de la clínica
+        AuditLogger::log(
+            action: 'login',
+            module: 'auth',
+            description: 'Inicio de sesión exitoso',
+            tenantId: $tenantId,
+            user: $user,
+            details: [
+                'ip' => $request->ip(),
+                'role' => $tenantUser?->role ?? $user->global_role,
+            ]
+        );
 
         $isPatient = $user->isPatient();
 
@@ -195,11 +293,37 @@ class AuthController extends Controller
         $request->session()->put('is_demo_mode', true);
         $request->session()->put('demo_user_name', $validated['full_name']);
 
+        AuditLogger::log(
+            action: 'login',
+            module: 'auth',
+            description: "Inicio de sesión en Modo Demo ({$validated['full_name']})",
+            tenantId: $demoTenant->id,
+            user: $demoUser
+        );
+
         return Inertia::location(route('dashboard'));
     }
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            $tenantId = $request->session()->get('area_impersonated_tenant_id')
+                ?? $request->attributes->get('tenant_id')
+                ?? $user->tenantUsers()->where('is_active', true)->value('tenant_id');
+
+            AuditLogger::log(
+                action: 'logout',
+                module: 'auth',
+                description: 'Cierre de sesión',
+                tenantId: $tenantId,
+                user: $user,
+                details: [
+                    'ip' => $request->ip(),
+                ]
+            );
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

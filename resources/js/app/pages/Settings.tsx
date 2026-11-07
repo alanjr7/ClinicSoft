@@ -18,7 +18,7 @@ import {
 } from '../components/ui/dialog';
 import Layout from '../components/Layout';
 
-type AppModule = 'patients' | 'appointments' | 'surgeries' | 'clinical' | 'budgets' | 'payments' | 'inventory' | 'reports' | 'accounting';
+type AppModule = 'patients' | 'appointments' | 'surgeries' | 'clinical' | 'budgets' | 'payments' | 'inventory' | 'reports' | 'accounting' | 'audit_log';
 
 type ModulePermission = {
   module: AppModule;
@@ -68,6 +68,7 @@ const MODULE_LABELS: Record<AppModule, string> = {
   inventory:    'Farmacia e Insumos',
   accounting:   'Contabilidad',
   reports:      'Reportes',
+  audit_log:    'Bitácora de Accesos y Cambios',
 };
 
 const ALL_MODULES = Object.keys(MODULE_LABELS) as AppModule[];

@@ -20,7 +20,7 @@ export interface AuthUser {
 
 export type AppModule =
     | 'patients' | 'appointments' | 'surgeries' | 'clinical' | 'clinical_history'
-    | 'budgets' | 'payments' | 'inventory' | 'reports' | 'settings' | 'accounting';
+    | 'budgets' | 'payments' | 'inventory' | 'reports' | 'settings' | 'accounting' | 'audit_log';
 
 export function useAuth() {
     const { auth } = usePage<{ auth: { user: AuthUser | null } }>().props;

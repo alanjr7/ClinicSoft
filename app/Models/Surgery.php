@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\BelongsToTenant;
+use App\Models\Traits\Auditable;
 
 class Surgery extends Model
 {
-    use HasFactory, HasUuids, BelongsToTenant;
+    use HasFactory, HasUuids, BelongsToTenant, Auditable;
 
     protected $table = 'surgeries';
 

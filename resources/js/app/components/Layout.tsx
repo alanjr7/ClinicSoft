@@ -1,7 +1,7 @@
 import { Link, usePage, router } from '@inertiajs/react';
 import {
     LayoutDashboard, Users, Calendar, FileText, Scan,
-    FileSpreadsheet, CreditCard, Package, BarChart3, Settings, LogOut, BookOpen, Menu, X, Globe, Sparkles, Network, ArrowLeft, Stethoscope, Activity, PlayCircle
+    FileSpreadsheet, CreditCard, Package, BarChart3, Settings, LogOut, BookOpen, Menu, X, Globe, Sparkles, Network, ArrowLeft, Stethoscope, Activity, PlayCircle, ClipboardList
 } from 'lucide-react';
 import { useAuth, type AppModule } from '../../hooks/useAuth';
 import { useState, useEffect } from 'react';
@@ -29,6 +29,7 @@ const ALL_MENU_ITEMS: MenuItem[] = [
     { icon: Package, label: 'Farmacia e Insumos', path: '/inventory', module: 'inventory' },
     { icon: BookOpen, label: 'Contabilidad', path: '/accounting', module: 'accounting' },
     { icon: BarChart3, label: 'Reportes', path: '/reports', module: 'reports' },
+    { icon: ClipboardList, label: 'Bitácora', path: '/audit-logs', module: 'audit_log' },
     { icon: Globe, label: 'Portal de Reservas', path: '/public-view', module: 'appointments' },
     { icon: Settings, label: 'Configuración', path: '/settings' },
     { icon: PlayCircle, label: 'Chat Guía', path: '/chat-guide' },

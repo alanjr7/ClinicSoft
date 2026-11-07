@@ -20,6 +20,7 @@ use App\Http\Controllers\SuperAdmin\UserController as SAUserController;
 use App\Http\Controllers\SuperAdmin\PlanController;
 use App\Http\Controllers\Erp\RadiographController;
 use App\Http\Controllers\Erp\SurgeryController;
+use App\Http\Controllers\Erp\AuditLogController;
 use App\Http\Controllers\PublicAppointmentController;
 
 /*
@@ -113,6 +114,8 @@ Route::middleware(['auth', 'checkTenant'])->group(function () {
 
     // Reports & Settings
     Route::get('/reports',                       [\App\Http\Controllers\Erp\ReportController::class, 'index'])->name('reports');
+    Route::get('/audit-logs',                    [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('/audit-logs/export',             [AuditLogController::class, 'export'])->name('audit-logs.export');
     Route::get('/settings',                      [ErpUserController::class, 'index'])->name('settings');
     Route::post('/settings/profile',             [ErpUserController::class, 'updateProfile'])->name('settings.profile');
     Route::post('/settings/password',            [ErpUserController::class, 'updatePassword'])->name('settings.password');

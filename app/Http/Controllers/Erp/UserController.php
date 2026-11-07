@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Tenant;
 use App\Models\TenantUser;
 use App\Models\UserModulePermission;
+use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Crypt;
@@ -113,6 +114,14 @@ class UserController extends Controller
 
         $tenant->update($validated);
 
+        AuditLogger::log(
+            action: 'update',
+            module: 'configuracion',
+            description: "Actualizó la información de la clínica ({$tenant->name})",
+            tenantId: $tenant->id,
+            entity: $tenant
+        );
+
         return back()->with('success', 'Información de la clínica actualizada correctamente.');
     }
 
@@ -163,6 +172,14 @@ class UserController extends Controller
             'encrypted_password' => Crypt::encryptString($validated['password']),
         ]);
 
+        AuditLogger::log(
+            action: 'update',
+            module: 'usuarios',
+            description: "Actualizó su contraseña personal de acceso",
+            tenantId: $request->attributes->get('tenant_id'),
+            user: $user
+        );
+
         return back()->with('success', 'Tu contraseña ha sido actualizada con éxito.');
     }
 
@@ -195,6 +212,15 @@ class UserController extends Controller
             'password'           => $validated['new_password'],
             'encrypted_password' => Crypt::encryptString($validated['new_password']),
         ]);
+
+        AuditLogger::log(
+            action: 'update',
+            module: 'usuarios',
+            description: "Restableció la contraseña del usuario {$targetUser->first_name} {$targetUser->last_name} ({$targetUser->email})",
+            tenantId: $tenantId,
+            user: Auth::user(),
+            entity: $targetUser
+        );
 
         return back()->with('success', 'Contraseña actualizada para ' . $targetUser->first_name . ' ' . $targetUser->last_name . '.');
     }
@@ -238,6 +264,15 @@ class UserController extends Controller
                     'license_number' => $validated['license_number'] ?? null,
                 ]);
             }
+
+            AuditLogger::log(
+                action: 'create',
+                module: 'usuarios',
+                description: "Creó al usuario de clínica {$validated['first_name']} {$validated['last_name']} ({$validated['email']}) con rol '{$validated['role']}'",
+                tenantId: $tenantId,
+                user: Auth::user(),
+                entity: $user
+            );
         });
 
         return back()->with('success', 'Usuario creado.');
@@ -273,6 +308,15 @@ class UserController extends Controller
         if (isset($validated['is_active']))  $user->is_active  = $validated['is_active'];
         $user->save();
 
+        AuditLogger::log(
+            action: 'update',
+            module: 'usuarios',
+            description: "Actualizó los datos del usuario {$user->first_name} {$user->last_name} ({$user->email})",
+            tenantId: $tenantId,
+            user: Auth::user(),
+            entity: $user
+        );
+
         return back()->with('success', 'Usuario actualizado.');
     }
 
@@ -283,6 +327,17 @@ class UserController extends Controller
         $tu->is_active = false;
         $tu->save();
 
+        $user = User::find($id);
+
+        AuditLogger::log(
+            action: 'delete',
+            module: 'usuarios',
+            description: "Desactivó al usuario de clínica " . ($user ? "{$user->first_name} {$user->last_name} ({$user->email})" : "ID {$id}"),
+            tenantId: $tenantId,
+            user: Auth::user(),
+            entity: $user
+        );
+
         return back()->with('success', 'Usuario desactivado.');
     }
 
@@ -292,6 +347,7 @@ class UserController extends Controller
 
         // Ensure the user belongs to this tenant
         TenantUser::where('tenant_id', $tenantId)->where('user_id', $id)->firstOrFail();
+        $targetUser = User::find($id);
 
         $validated = $request->validate([
             'permissions'              => 'required|array',
@@ -305,6 +361,16 @@ class UserController extends Controller
                 ['is_enabled' => $perm['is_enabled']]
             );
         }
+
+        AuditLogger::log(
+            action: 'update',
+            module: 'usuarios',
+            description: "Actualizó los permisos de módulos para " . ($targetUser ? "{$targetUser->first_name} {$targetUser->last_name}" : "usuario ID {$id}"),
+            tenantId: $tenantId,
+            user: Auth::user(),
+            entity: $targetUser,
+            details: $validated['permissions']
+        );
 
         return back()->with('success', 'Permisos actualizados.');
     }
