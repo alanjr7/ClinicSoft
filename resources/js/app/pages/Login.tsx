@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm, router } from '@inertiajs/react';
+import { useForm, router, Link, usePage } from '@inertiajs/react';
 import { Lottie } from 'lottie-react';
 import doctorAnimation from '../../../../public/json_icono/Doctor.json';
 import {
@@ -14,6 +14,8 @@ import {
 } from '../components/ui/dialog';
 
 export default function Login() {
+  const { flash } = usePage().props as any;
+
   const { data, setData, post, processing, errors } = useForm({
     email: '',
     password: '',
@@ -80,6 +82,13 @@ export default function Login() {
               <p className="text-xs text-[#6B7280] dark:text-[#94A3B8] mt-1">Ingresa tus credenciales para acceder a tu clínica</p>
             </div>
 
+            {flash?.success && (
+              <div className="flex items-start gap-2.5 text-xs text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl p-3.5 border border-emerald-200 dark:border-emerald-800/50">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                <span>{flash.success}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-semibold text-[#374151] dark:text-gray-200">
@@ -127,9 +136,12 @@ export default function Login() {
                   />
                   Recordarme
                 </label>
-                <a href="#" className="text-[#14B8A6] hover:text-[#0F766E] font-medium">
+                <Link
+                  href="/forgot-password"
+                  className="text-[#14B8A6] hover:text-[#0F766E] font-medium transition-colors"
+                >
                   ¿Olvidaste tu contraseña?
-                </a>
+                </Link>
               </div>
 
               {errors.email && (

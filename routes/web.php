@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Erp\DashboardController;
 use App\Http\Controllers\Erp\PatientController;
 use App\Http\Controllers\Erp\PatientFileController;
@@ -32,6 +33,12 @@ Route::get('/login',        [AuthController::class, 'showLogin'])->name('login')
 Route::post('/login',       [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout',      [AuthController::class, 'logout'])->name('logout');
 Route::post('/demo-access', [AuthController::class, 'demoAccess'])->name('demo.access');
+
+// --- Password Reset ---
+Route::get('/forgot-password',        [PasswordResetController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password',       [PasswordResetController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetPassword'])->name('password.reset');
+Route::post('/reset-password',        [PasswordResetController::class, 'resetPassword'])->middleware('throttle:5,1')->name('password.update');
 
 // --- ERP (dentist / admin / staff) ---
 Route::middleware(['auth', 'checkTenant'])->group(function () {

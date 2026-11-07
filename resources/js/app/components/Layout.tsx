@@ -18,20 +18,20 @@ interface MenuItem {
 }
 
 const ALL_MENU_ITEMS: MenuItem[] = [
-    { icon: LayoutDashboard, label: 'Dashboard',             path: '/' },
-    { icon: Users,           label: 'Pacientes',             path: '/patients',         module: 'patients' },
-    { icon: Calendar,        label: 'Agenda y Citas',        path: '/appointments',     module: 'appointments' },
-    { icon: Activity,        label: 'Cirugías y Quirófano',  path: '/surgeries',        module: 'surgeries' },
-    { icon: Stethoscope,     label: 'Consultas Médicas',     path: '/clinical-history', module: 'clinical' },
-    { icon: Scan,            label: 'Estudios Diagnósticos', path: '/radiographs',      module: 'clinical' },
-    { icon: FileSpreadsheet, label: 'Presupuestos',          path: '/budgets',          module: 'budgets' },
-    { icon: CreditCard,      label: 'Pagos y Caja',          path: '/payments',         module: 'payments' },
-    { icon: Package,         label: 'Farmacia e Insumos',    path: '/inventory',        module: 'inventory' },
-    { icon: BookOpen,        label: 'Contabilidad',          path: '/accounting',       module: 'accounting' },
-    { icon: BarChart3,       label: 'Reportes',              path: '/reports',          module: 'reports' },
-    { icon: Globe,           label: 'Portal de Reservas',    path: '/public-view',      module: 'appointments' },
-    { icon: Settings,        label: 'Configuración',         path: '/settings' },
-    { icon: PlayCircle,      label: 'Chat Guía',             path: '/chat-guide' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+    { icon: Users, label: 'Pacientes', path: '/patients', module: 'patients' },
+    { icon: Calendar, label: 'Agenda y Citas', path: '/appointments', module: 'appointments' },
+    { icon: Activity, label: 'Cirugías y Quirófano', path: '/surgeries', module: 'surgeries' },
+    { icon: Stethoscope, label: 'Consultas Médicas', path: '/clinical-history', module: 'clinical' },
+    { icon: Scan, label: 'Estudios Diagnósticos', path: '/radiographs', module: 'clinical' },
+    { icon: FileSpreadsheet, label: 'Presupuestos', path: '/budgets', module: 'budgets' },
+    { icon: CreditCard, label: 'Pagos y Caja', path: '/payments', module: 'payments' },
+    { icon: Package, label: 'Farmacia e Insumos', path: '/inventory', module: 'inventory' },
+    { icon: BookOpen, label: 'Contabilidad', path: '/accounting', module: 'accounting' },
+    { icon: BarChart3, label: 'Reportes', path: '/reports', module: 'reports' },
+    { icon: Globe, label: 'Portal de Reservas', path: '/public-view', module: 'appointments' },
+    { icon: Settings, label: 'Configuración', path: '/settings' },
+    { icon: PlayCircle, label: 'Chat Guía', path: '/chat-guide' },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -93,18 +93,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div id="app-root" className="flex h-full bg-[#F8FAFC] dark:bg-[#0B1120] text-[#111827] dark:text-[#F8FAFC] overflow-hidden transition-colors duration-200">
             {/* Overlay for mobile */}
             {isMobileMenuOpen && (
-                <div 
+                <div
                     className="fixed inset-0 bg-gray-900/60 z-40 lg:hidden backdrop-blur-sm transition-opacity"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
 
             {/* Sidebar */}
-            <aside 
-                id="app-sidebar" 
-                className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#0F172A] border-r border-[#F3F4F6] dark:border-[#1E293B] flex flex-col transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
-                    isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-                }`}
+            <aside
+                id="app-sidebar"
+                className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#0F172A] border-r border-[#F3F4F6] dark:border-[#1E293B] flex flex-col transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}
             >
                 {/* Logo and Mobile Close */}
                 <div className="p-5 border-b border-[#F3F4F6] dark:border-[#1E293B] flex items-center justify-between">
@@ -123,7 +122,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                         <ThemeToggle className="hidden lg:flex" />
-                        <button 
+                        <button
                             className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white p-1 cursor-pointer"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -139,11 +138,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <li key={item.path}>
                                 <Link
                                     href={item.path}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                                        isActive(item.path)
-                                            ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-lg shadow-sky-600/20 font-medium'
-                                            : 'text-[#6B7280] dark:text-[#94A3B8] hover:bg-[#F8FAFC] dark:hover:bg-[#1E293B] hover:text-[#111827] dark:hover:text-white'
-                                    }`}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive(item.path)
+                                        ? 'bg-sky-600 dark:bg-sky-500 text-white shadow-lg shadow-sky-600/20 font-medium'
+                                        : 'text-[#6B7280] dark:text-[#94A3B8] hover:bg-[#F8FAFC] dark:hover:bg-[#1E293B] hover:text-[#111827] dark:hover:text-white'
+                                        }`}
                                 >
                                     <item.icon className="w-5 h-5" />
                                     <span className="text-sm">{item.label}</span>
